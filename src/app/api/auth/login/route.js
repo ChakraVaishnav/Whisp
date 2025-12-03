@@ -40,10 +40,12 @@ export async function POST(req) {
     const cookieObj = buildRefreshCookie(tokens.refreshToken);
     const serializeCookie = (c) => {
       const opts = c.options || {};
+      const secure = process.env.COOKIE_SECURE === 'true';
+      const sameSite = process.env.COOKIE_SAMESITE || 'strict';
       const parts = [`${c.name}=${encodeURIComponent(c.value)}`];
       if (opts.httpOnly) parts.push('HttpOnly');
-      if (opts.secure) parts.push('Secure');
-      if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
+      if (secure) parts.push('Secure');
+      parts.push(`SameSite=${sameSite}`);
       if (opts.path) parts.push(`Path=${opts.path}`);
       if (typeof opts.maxAge !== 'undefined') parts.push(`Max-Age=${opts.maxAge}`);
       return parts.join('; ');

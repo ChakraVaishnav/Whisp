@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '../../../../../node_modules/bro-auth/dist/index';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Verify access token server-side using bro-auth
 export async function POST(req) {
@@ -23,6 +26,24 @@ export async function POST(req) {
     const result = verifyAccessToken(token, fingerprint, accessSecret);
     if (!result.valid) {
       return NextResponse.json({ valid: false, error: result.error }, { status: 401 });
+    }
+
+    // Fetch user data from database
+    const userId = result.payload?.sub;
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      });
+
+      if (user) {
+        return NextResponse.json({ valid: true, payload: { ...result.payload, ...user } }, { status: 200 });
+      }
     }
 
     return NextResponse.json({ valid: true, payload: result.payload }, { status: 200 });

@@ -18,17 +18,24 @@ export async function POST(req) {
     // If client didn't send refreshToken, try to read cookie 'bro_refresh'
     if (!refreshToken) {
       const cookieHeader = req.headers.get('cookie') || '';
+      console.log('[REFRESH] Cookie header:', cookieHeader.substring(0, 100));
       const match = cookieHeader.match(/(?:^|; )bro_refresh=([^;]+)/);
       if (match) {
         refreshToken = decodeURIComponent(match[1]);
+        console.log('[REFRESH] Found refresh token in cookie');
+      } else {
+        console.log('[REFRESH] No bro_refresh cookie found');
       }
     }
+
+    console.log('[REFRESH] Has refresh token:', !!refreshToken, 'Has fingerprint:', !!fingerprint);
 
     if (!refreshToken || !fingerprint) {
       return NextResponse.json({ error: 'Refresh token and fingerprint are required' }, { status: 400 });
     }
 
     const result = verifyRefreshToken(refreshToken, fingerprint, refreshSecret);
+    console.log('[REFRESH] Verify result:', { valid: result.valid, error: result.error });
     if (!result.valid) {
       return NextResponse.json({ error: result.error || 'Invalid refresh token' }, { status: 401 });
     }
@@ -40,10 +47,12 @@ export async function POST(req) {
     // Rotate refresh token via cookie (serialize)
     const cookieObj = buildRefreshCookie(tokens.refreshToken);
     const opts = cookieObj.options || {};
+    const secure = process.env.COOKIE_SECURE === 'true';
+    const sameSite = process.env.COOKIE_SAMESITE || 'strict';
     const parts = [`${cookieObj.name}=${encodeURIComponent(cookieObj.value)}`];
     if (opts.httpOnly) parts.push('HttpOnly');
-    if (opts.secure) parts.push('Secure');
-    if (opts.sameSite) parts.push(`SameSite=${opts.sameSite}`);
+    if (secure) parts.push('Secure');
+    parts.push(`SameSite=${sameSite}`);
     if (opts.path) parts.push(`Path=${opts.path}`);
     if (typeof opts.maxAge !== 'undefined') parts.push(`Max-Age=${opts.maxAge}`);
     const cookieHeader = parts.join('; ');

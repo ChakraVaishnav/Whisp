@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getFingerprint } from "bro-auth/browser"
-import { useAuth } from '../../context/AuthContext';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getFingerprint } from "bro-auth/browser";
+import { useAuth } from "../../context/AuthContext";
+import DashboardLayout from "../../components/dashboard/DashboardLayout";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -12,71 +13,96 @@ export default function DashboardPage() {
   const { accessToken, setToken, clearToken } = useAuth();
 
   useEffect(() => {
-    const check = async () => {
-      let token = accessToken || null;
+    const checkSession = async () => {
+      let token = accessToken;
 
-      // If no in-memory access token, try to refresh via httpOnly cookie
-      if (!token) {
-        try {
-          const fp = await getFingerprint();
-          const res = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fingerprint: fp.hash }),
-          });
-          if (!res.ok) throw new Error('Refresh failed');
-          const data = await res.json();
-          token = data.accessToken;
-          if (token) setToken(token);
-        } catch (err) {
-          console.error('Refresh failed', err);
-        }
-      }
-
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      try {
-        const fp = await getFingerprint();
-        const res = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, fingerprint: fp.hash }),
-        });
-        const data = await res.json();
-        if (data.valid) {
+      // 1️⃣ Try using existing access token
+      if (token) {
+        const ok = await verifyToken(token);
+        if (ok.valid) {
           setValid(true);
-          setUser(data.payload || null);
-        } else {
-          clearToken();
-          router.push('/login');
+          setUser(ok.payload);
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error('Dashboard verify error', err);
-        router.push('/login');
-      } finally {
-        setLoading(false);
       }
+
+      // 2️⃣ If verify failed or token missing → try refresh
+      const refreshed = await tryRefresh();
+      if (refreshed) {
+        const ok2 = await verifyToken(refreshed);
+        if (ok2.valid) {
+          setValid(true);
+          setUser(ok2.payload);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 3️⃣ Everything failed → logout & redirect
+      clearToken();
+      router.push("/login");
     };
-    check();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    checkSession();
   }, [accessToken, router, setToken, clearToken]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Checking session...</div>;
+  // ------------------------------
+  // Helper: Verify token
+  // ------------------------------
+  const verifyToken = async (token) => {
+    try {
+      const fp = await getFingerprint();
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, fingerprint: fp.hash }),
+      });
+      return res.json();
+    } catch (err) {
+      console.error("Verify error", err);
+      return { valid: false };
+    }
+  };
+
+  // ------------------------------
+  // Helper: Try refresh
+  // ------------------------------
+  const tryRefresh = async () => {
+    try {
+      const fp = await getFingerprint();
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fingerprint: fp.hash }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data.accessToken) return null;
+
+      setToken(data.accessToken);
+      return data.accessToken;
+    } catch (err) {
+      console.error("Refresh failed", err);
+      return null;
+    }
+  };
+
+  // ------------------------------
+
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-600/30 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+
   if (!valid) return null;
 
-  return (
-    <main className="min-h-screen bg-gray-950 text-slate-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-4">Dashboard</h1>
-        <p className="mb-6">Welcome back{user?.name ? `, ${user.name}` : ''}.</p>
-        <section className="bg-gray-900 p-6 rounded-lg">
-          <h2 className="text-xl font-medium mb-2">Session</h2>
-          <pre className="text-sm text-slate-300 bg-gray-800 p-4 rounded">{JSON.stringify(user, null, 2)}</pre>
-        </section>
-      </div>
-    </main>
-  );
+  return <DashboardLayout user={user} />;
 }
