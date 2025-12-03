@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "@prisma/client": "^5.15.1",
+    "@upstash/redis": "^1.35.7",
     "bcryptjs": "^2.4.3",
     "bro-auth": "^0.1.4",
     "framer-motion": "^12.23.25",
-    "next": "16.0.6",
+    "next": "^16.0.7",
     "prisma": "^5.15.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",

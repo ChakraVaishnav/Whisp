@@ -21,10 +21,10 @@ export default function DashboardLayout({ user }) {
 
   return (
     <SocketProvider userId={user?.id}>
-      <div className="min-h-screen bg-gray-950 flex flex-col">
+      <div className="h-screen bg-gray-950 flex flex-col">
       {/* Top Bar */}
       <header className="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
-        <div className="flex items-center gap-3">
+        <div className="text-2xl font-bold tracking-tight">
           <h1 className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Whisp
             </h1>
@@ -37,7 +37,7 @@ export default function DashboardLayout({ user }) {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Left Sidebar - Whispers List */}
         <WhispersSidebar
           userId={user?.id}

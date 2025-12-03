@@ -56,6 +56,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({ token, fingerprint: fp.hash }),
       });
       return res.json();
@@ -74,6 +75,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/auth/refresh", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({ fingerprint: fp.hash }),
       });
 

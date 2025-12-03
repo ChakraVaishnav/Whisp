@@ -6,7 +6,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [sending, setSending] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -14,7 +14,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/users/search?query=${encodeURIComponent(search)}`);
+      const res = await fetch(`/api/users/search?query=${encodeURIComponent(search)}&usernameOnly=1&me=${encodeURIComponent(userId)}`);
       if (res.ok) {
         const data = await res.json();
         setResults(data.users || []);
@@ -27,7 +27,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
   };
 
   const handleSendRequest = async (targetUserId) => {
-    setSending(true);
+    setSending(targetUserId);
     try {
       const res = await fetch('/api/whispers', {
         method: 'POST',
@@ -45,7 +45,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
     } catch (err) {
       console.error('Failed to send whisper request', err);
     } finally {
-      setSending(false);
+      setSending(null);
     }
   };
 
@@ -84,7 +84,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by username or email..."
+                  placeholder="Search by username..."
                   className="flex-1 bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
                   autoFocus
                 />
@@ -107,38 +107,49 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
                   {search ? 'No users found' : 'Search for users to connect'}
                 </div>
               ) : (
-                results.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-all"
-                  >
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                      {(user.username || user.email || '?')[0].toUpperCase()}
-                    </div>
+                results.map((user) => {
+                  const status = user.connectionStatus || 'NONE';
+                  const sentByMe = !!user.sentByMe;
+                  return (
+                    <div
+                      key={user.id}
+                      className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-all"
+                    >
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                        {(user.username || user.email || '?')[0].toUpperCase()}
+                      </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
-                        {user.username || user.email || 'Unknown'}
-                      </p>
-                      {user.email && user.username && (
-                        <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">
+                          {user.username || 'Unknown'}
+                        </p>
+                      </div>
+
+                      {/* Connection state / action */}
+                      {user.id === userId ? (
+                        <div className="px-3 py-1.5 text-xs text-gray-300">You</div>
+                      ) : status === 'ACCEPTED' ? (
+                        <div className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white">Connected</div>
+                      ) : status === 'PENDING' && sentByMe ? (
+                        <div className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500 text-white">Sent</div>
+                      ) : status === 'PENDING' && !sentByMe ? (
+                        <div className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-600 text-white">Requested</div>
+                      ) : (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleSendRequest(user.id)}
+                          disabled={!!sending}
+                          className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-linear-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50"
+                        >
+                          {sending === user.id ? '...' : 'Connect'}
+                        </motion.button>
                       )}
                     </div>
-
-                    {/* Connect Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleSendRequest(user.id)}
-                      disabled={sending}
-                      className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-linear-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50"
-                    >
-                      {sending ? '...' : 'Connect'}
-                    </motion.button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

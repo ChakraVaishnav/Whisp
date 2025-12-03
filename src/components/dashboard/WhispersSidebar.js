@@ -1,16 +1,40 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { useSocket } from '../../context/SocketContext';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisper, onAddClick, refreshKey }) {
   const [whispers, setWhispers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const { socket } = useSocket();
+  const [presenceMap, setPresenceMap] = useState({});
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { clearToken } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!userId) return;
     fetchWhispers();
   }, [userId, refreshKey]);
+
+  // Update presence when whispers list changes or socket connects
+  useEffect(() => {
+    if (!socket || whispers.length === 0) return;
+    const userIds = whispers.map((w) => (w.userAId === userId ? w.userBId : w.userAId));
+    // ask server for presence
+    socket.emit('get-presence', { userIds }, (result) => {
+      if (result && typeof result === 'object') setPresenceMap(result);
+    });
+
+    const handlePresence = ({ userId: uid, online }) => {
+      setPresenceMap((prev) => ({ ...prev, [uid]: !!online }));
+    };
+    socket.on('presence-update', handlePresence);
+    return () => socket.off('presence-update', handlePresence);
+  }, [socket, whispers, userId]);
 
   const fetchWhispers = async () => {
     try {
@@ -37,15 +61,61 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
       {/* Header */}
       <div className="p-4 border-b border-gray-800/50">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-white">Whispers</h2>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onAddClick}
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white text-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all"
-          >
-            +
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMenuOpen((s) => !s)}
+              className="w-9 h-9 rounded-md bg-gray-800/30 flex items-center justify-center text-white hover:bg-gray-800/40 transition-all"
+              aria-label="menu"
+            >
+              ≡
+            </button>
+            <h2 className="text-lg font-semibold text-white">Whispers</h2>
+          </div>
+
+          {/* Dropdown menu */}
+          <div className="relative">
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-gray-900/95 border border-gray-800/50 rounded-lg shadow-lg p-2 z-50">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onAddClick?.();
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-gray-800/20 transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-md bg-purple-600/20 flex items-center justify-center text-purple-300">+</span>
+                  <span className="text-sm text-white font-medium">Add Whisper</span>
+                </button>
+
+                <button
+                  className="flex items-center gap-3 w-full px-3 py-2 mt-1 rounded bg-gray-800/10 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  <span className="w-8 h-8 rounded-md bg-gray-700/30 flex items-center justify-center text-gray-300">⚑</span>
+                  <span className="text-sm">Create Group (coming soon)</span>
+                </button>
+
+                <div className="mt-2 border-t border-gray-800/40" />
+
+                <button
+                  onClick={async () => {
+                    try {
+                      setMenuOpen(false);
+                      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                    } catch (err) {
+                      console.error('Logout failed', err);
+                    }
+                    clearToken();
+                    router.push('/login');
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded hover:bg-red-700/10 transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-md bg-red-700/10 flex items-center justify-center text-red-300">⎋</span>
+                  <span className="text-sm text-red-300 font-medium">Log out</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Search */}
@@ -64,7 +134,7 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
           <div className="p-4 text-center text-gray-500 text-sm">Loading...</div>
         ) : filteredWhispers.length === 0 ? (
           <div className="p-4 text-center text-gray-500 text-sm">
-            {search ? 'No whispers found' : 'No connections yet. Click + to add!'}
+            {search ? 'No whispers found' : 'No connections yet. Use the menu to add!'}
           </div>
         ) : (
           filteredWhispers.map((whisper) => {
@@ -83,9 +153,12 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
               >
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                    {(otherUser?.username || otherUser?.email || '?')[0].toUpperCase()}
-                  </div>
+                        <div className="relative">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                            {(otherUser?.username || otherUser?.email || '?')[0].toUpperCase()}
+                          </div>
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${presenceMap[otherUser?.id] ? 'bg-green-400' : 'bg-orange-400'}`} />
+                        </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">

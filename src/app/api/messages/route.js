@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { verifyAccessToken } from '../../../../../node_modules/bro-auth/dist/index';
 
 const prisma = new PrismaClient();
 
@@ -57,21 +58,36 @@ export async function GET(req) {
 // POST - Send a new message
 export async function POST(req) {
   try {
-    const { senderId, receiverId, message } = await req.json();
+    const body = await req.json();
+    const { senderId, receiverId, message, fingerprint } = body;
 
+    // Verify access token from Authorization header
+    const auth = req.headers.get('authorization') || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+    const accessSecret = process.env.ACCESS_SECRET;
+    if (!token || !fingerprint || !accessSecret) {
+      return NextResponse.json({ error: 'Authorization required' }, { status: 401 });
+    }
+    const verifyResult = verifyAccessToken(token, fingerprint, accessSecret);
+    if (!verifyResult.valid) {
+      return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
+    }
     if (!senderId || !receiverId || !message) {
       return NextResponse.json({ error: 'senderId, receiverId, and message required' }, { status: 400 });
     }
 
     // For MVP, store message as plain text in cipherText field
     // In production, encrypt with AES-GCM before storing
+    // For self-chat (sender === receiver) we store plaintext in cipherText without encryption
+    const ivVal = senderId === receiverId ? '' : 'placeholder-iv';
+    const tagVal = senderId === receiverId ? '' : 'placeholder-tag';
     const newMessage = await prisma.message.create({
       data: {
         senderId,
         receiverId,
-        cipherText: message, // TODO: encrypt this
-        iv: 'placeholder-iv', // TODO: generate real IV
-        tag: 'placeholder-tag', // TODO: generate real tag
+        cipherText: message,
+        iv: ivVal,
+        tag: tagVal,
         type: 'TEXT',
       },
     });
