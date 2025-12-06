@@ -1,10 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 
-let cachedPrisma = null;
+const globalForPrisma = globalThis;
 
-export function getPrismaClient() {
-  if (cachedPrisma) return cachedPrisma;
-  if (!process.env.DATABASE_URL) return null;
-  cachedPrisma = new PrismaClient();
-  return cachedPrisma;
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: ['warn', 'error'],
+  });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
 }
+
+export default prisma;
