@@ -64,6 +64,8 @@ export default function DashboardLayout({ user }) {
                     onSelectWhisper={handleWhisperSelect}
                     onAddClick={() => setShowAddModal(true)}
                     refreshKey={refreshKey}
+                    showBell
+                    onNotificationUpdate={handleRefresh}
                   />
                 </div>
               )}

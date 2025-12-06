@@ -4,9 +4,10 @@ import { useSocket } from '../../context/SocketContext';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import NotificationBell from './NotificationBell';
 import logger from '../../utils/logger';
 
-export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisper, onAddClick, refreshKey }) {
+export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisper, onAddClick, refreshKey, showBell = false, onNotificationUpdate }) {
   const [whispers, setWhispers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -73,9 +74,14 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
             <h2 className="text-lg font-semibold text-white">Whispers</h2>
           </div>
 
-          {/* Dropdown menu */}
-          <div className="relative">
-            {menuOpen && (
+          <div className="flex items-center gap-3">
+            {showBell && (
+              <NotificationBell userId={userId} onUpdate={onNotificationUpdate} />
+            )}
+
+            {/* Dropdown menu */}
+            <div className="relative">
+              {menuOpen && (
               <div className="absolute right-0 mt-2 w-56 bg-gray-900/95 border border-gray-800/50 rounded-lg shadow-lg p-2 z-50">
                 <button
                   onClick={() => {
@@ -116,6 +122,7 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
 
