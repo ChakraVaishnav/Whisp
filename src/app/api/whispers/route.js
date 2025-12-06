@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import logger from '../../../utils/logger';
+import { getPrismaClient } from '../../../lib/prismaClient';
 
-const prisma = new PrismaClient();
 
 // GET - Fetch accepted whispers for a user
 export async function GET(req) {
+  const prisma = getPrismaClient();
+  if (!prisma) {
+    logger.error('[WHISPERS] Prisma client unavailable');
+    return NextResponse.json({ error: 'Database connection is not configured' }, { status: 500 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
@@ -41,6 +45,11 @@ export async function GET(req) {
 
 // POST - Create a new whisper request
 export async function POST(req) {
+  const prisma = getPrismaClient();
+  if (!prisma) {
+    logger.error('[WHISPERS] Prisma client unavailable');
+    return NextResponse.json({ error: 'Database connection is not configured' }, { status: 500 });
+  }
   try {
     const { userAId, userBId } = await req.json();
 

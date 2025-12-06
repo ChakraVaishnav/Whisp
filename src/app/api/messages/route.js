@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { verifyAccessToken } from 'bro-auth/core';
 import logger from '../../../utils/logger';
+import { getPrismaClient } from '../../../lib/prismaClient';
 
-const prisma = new PrismaClient();
 
 // GET - Fetch messages for a whisper (conversation)
 export async function GET(req) {
+  const prisma = getPrismaClient();
+  if (!prisma) {
+    logger.error('[MESSAGES] Prisma client unavailable');
+    return NextResponse.json({ error: 'Database connection is not configured' }, { status: 500 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const whisperId = searchParams.get('whisperId');
@@ -58,6 +62,11 @@ export async function GET(req) {
 
 // POST - Send a new message
 export async function POST(req) {
+  const prisma = getPrismaClient();
+  if (!prisma) {
+    logger.error('[MESSAGES] Prisma client unavailable');
+    return NextResponse.json({ error: 'Database connection is not configured' }, { status: 500 });
+  }
   try {
     const body = await req.json();
     const { senderId, receiverId, message, fingerprint } = body;

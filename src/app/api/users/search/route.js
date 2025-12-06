@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import logger from '../../../../utils/logger';
+import { getPrismaClient } from '../../../../lib/prismaClient';
 
-const prisma = new PrismaClient();
 
 // GET - Search users by username or email
 export async function GET(req) {
@@ -10,6 +9,12 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('query');
     const usernameOnly = searchParams.get('usernameOnly');
+
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      logger.error('[USERS/SEARCH] Prisma client unavailable');
+      return NextResponse.json({ error: 'Database connection is not configured' }, { status: 500 });
+    }
 
     if (!query || query.length < 2) {
       return NextResponse.json({ error: 'Query must be at least 2 characters' }, { status: 400 });

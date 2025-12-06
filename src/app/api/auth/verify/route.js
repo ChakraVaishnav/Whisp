@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from 'bro-auth/core';
-import { PrismaClient } from '@prisma/client';
 import logger from '../../../../utils/logger';
+import { getPrismaClient } from '../../../../lib/prismaClient';
 
-const prisma = new PrismaClient();
 
 // Verify access token server-side using bro-auth
 export async function POST(req) {
@@ -30,6 +29,15 @@ export async function POST(req) {
     }
 
     // Fetch user data from database
+    const prisma = getPrismaClient();
+    if (!prisma) {
+      logger.error('[VERIFY] Prisma client unavailable');
+      return NextResponse.json(
+        { valid: false, error: 'Database connection is not configured' },
+        { status: 500 }
+      );
+    }
+
     const userId = result.payload?.sub;
     if (userId) {
       const user = await prisma.user.findUnique({
