@@ -28,6 +28,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
       ? selectedWhisper.userB
       : selectedWhisper.userA
     : null;
+  const displayName = otherUser?.username || otherUser?.name || otherUser?.email || 'Unknown';
 
   // Load chat history from DB
   useEffect(() => {
@@ -280,19 +281,21 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
   return (
     <div className="flex-1 flex flex-col bg-gray-950">
       {/* HEADER */}
-      <header className="p-4 bg-gray-900/40 border-b border-gray-800 flex items-center gap-3">
+      <header className="p-4 bg-gray-900 border-b border-gray-800 flex items-center gap-3 sticky top-0 z-30">
+
         {onBack && (
           <button
-            onClick={onBack}
-            className="p-2 rounded-full bg-gray-800 text-white"
-          >
-            ←
-          </button>
+  onClick={onBack}
+  className="px-5 py-2 rounded-full bg-gray-800 text-white border border-gray-700"
+>
+  ←
+</button>
+
         )}
 
-        <div className="relative">
+        <div className="relative shrink-0">
           <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white">
-            {(otherUser.username || otherUser.email || "?")[0]?.toUpperCase()}
+            {(displayName[0] || "?").toUpperCase()}
           </div>
           <span
             className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${
@@ -301,15 +304,19 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
           />
         </div>
 
-        <div>
-          <p className="text-white font-semibold">
-            {otherUser.username || otherUser.email}
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <p
+            className="text-white font-semibold truncate whitespace-nowrap"
+            title={displayName}
+          >
+            {displayName}
           </p>
-          <p className={otherOnline ? "text-green-400" : "text-orange-400"}>
+          <p className={`text-xs ${otherOnline ? "text-green-400" : "text-orange-400"}`}>
             {otherOnline ? "Online" : "Offline"}
           </p>
         </div>
       </header>
+
 
       {/* MESSAGES */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
@@ -360,7 +367,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
         onSubmit={handleSend}
         className="p-4 bg-gray-900/50 border-t border-gray-800 flex flex-col gap-3"
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-end gap-3">
           <button
             type="button"
             className="w-11 h-11 rounded-full bg-gray-800 flex items-center justify-center text-white"
@@ -372,7 +379,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
           <button
             type="button"
             onClick={() => setShowEmojiPicker((p) => !p)}
-            className="w-11 h-11 rounded-full bg-gray-800 flex items-center justify-center text-white"
+            className="hidden sm:flex w-11 h-11 rounded-full bg-gray-800 items-center justify-center text-white"
           >
             😊
           </button>
@@ -382,7 +389,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
             onChange={(e) => setNewMessage(e.target.value)}
             onFocus={() => setShowEmojiPicker(false)}
             placeholder="Type a message…"
-            className="flex-1 min-h-10 rounded-2xl bg-gray-800 p-3 text-white resize-none"
+            className="flex-1 min-h-12 rounded-2xl bg-gray-800 p-3 text-white resize-none border border-transparent focus:border-purple-500 focus:outline-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -390,10 +397,31 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
               }
             }}
           />
+
+          <button
+            type="submit"
+            disabled={sending}
+            className="w-11 h-11 rounded-full bg-purple-600 text-white flex items-center justify-center"
+            aria-label="Send message"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-5 h-5"
+            >
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
         </div>
 
         {showEmojiPicker && (
-          <div className="grid grid-cols-6 gap-2 bg-gray-900 p-3 rounded-xl border border-gray-700">
+          <div className="hidden sm:grid grid-cols-6 gap-2 bg-gray-900 p-3 rounded-xl border border-gray-700">
             {emojiList.map((emoji) => (
               <button
                 key={emoji}
@@ -422,16 +450,6 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
             </button>
           </div>
         )}
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={sending}
-            className="px-6 py-2 rounded-full bg-purple-600 text-white font-semibold"
-          >
-            Send
-          </button>
-        </div>
 
         <input
           type="file"

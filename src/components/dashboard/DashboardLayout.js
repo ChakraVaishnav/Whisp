@@ -49,18 +49,21 @@ export default function DashboardLayout({ user }) {
     <SocketProvider userId={user?.id}>
       <div className="h-screen bg-gray-950 flex flex-col">
       {/* Top Bar */}
-      <header className="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
-        <div className="text-2xl font-bold tracking-tight">
-          <h1 className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Whisp
-            </h1>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <h1 className="text-sm text-gray-400">Welcome, {user?.name || user?.username}</h1>
-          <NotificationBell userId={user?.id} onUpdate={handleRefresh} />
-        </div>
-      </header>
+      {/* Top Bar (hidden in mobile) */}
+{/* Top Bar hidden on mobile */}
+<header className="hidden sm:flex bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 px-6 py-4 items-center justify-between sticky top-0 z-20">
+  <div className="text-2xl font-bold tracking-tight">
+    <h1 className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+      Whisp
+    </h1>
+  </div>
+
+  <div className="flex items-center gap-4">
+    <h1 className="text-sm text-gray-400">Welcome, {user?.name || user?.username}</h1>
+    <NotificationBell userId={user?.id} onUpdate={handleRefresh} />
+  </div>
+</header>
+
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden min-h-0 relative">
@@ -97,11 +100,12 @@ export default function DashboardLayout({ user }) {
               onAddClick={() => setShowAddModal(true)}
               refreshKey={refreshKey}
             />
-
+            <div className="flex flex-col h-full w-full overflow-hidden">
             <ChatWindow
               selectedWhisper={selectedWhisper}
               currentUserId={user?.id}
             />
+            </div>
           </>
         )}
       </div>
