@@ -11,7 +11,7 @@ export function SocketProvider({ children, userId }) {
 
   useEffect(() => {
     if (!userId) return;
-    const socketUrl = "http://localhost:4000" || env.NEXT_PUBLIC_SOCKET_URL;
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000';
     // Connect to your Express Socket.IO server
     const socketInstance = io(socketUrl, {
       auth: { userId },
