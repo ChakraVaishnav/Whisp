@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useSocket } from "../../context/SocketContext";
 import { getFingerprint } from "bro-auth/browser";
@@ -53,7 +53,12 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
     };
 
     fetchHistory();
-  }, [selectedWhisper, currentUserId]);
+  }, [selectedWhisper, currentUserId, otherUser?.id]);
+
+  useEffect(() => {
+    if (!selectedWhisper) return;
+    setMessages([]);
+  }, [selectedWhisper?.id]);
 
   // Realtime events from socket
   useEffect(() => {
@@ -148,7 +153,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
   }, [socket, selectedWhisper, otherUser]);
 
   // Auto-scroll
-  useEffect(() => {
+  useLayoutEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -279,7 +284,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-950">
+    <div className="flex-1 flex flex-col min-h-0 bg-gray-950">
       {/* HEADER */}
       <header className="p-4 bg-gray-900 border-b border-gray-800 flex items-center gap-3 sticky top-0 z-30">
 
@@ -319,7 +324,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
 
 
       {/* MESSAGES */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3">
+      <div className="flex-1 min-h-0 p-4 overflow-y-auto space-y-3">
         {messages.map((msg, idx) => {
           const mine = msg.senderId === currentUserId;
 
