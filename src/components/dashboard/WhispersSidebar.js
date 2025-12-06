@@ -4,6 +4,7 @@ import { useSocket } from '../../context/SocketContext';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import logger from '../../utils/logger';
 
 export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisper, onAddClick, refreshKey }) {
   const [whispers, setWhispers] = useState([]);
@@ -44,7 +45,7 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
         setWhispers(data.whispers || []);
       }
     } catch (err) {
-      console.error('Failed to fetch whispers', err);
+      logger.error('Failed to fetch whispers', err);
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
   });
 
   return (
-    <aside className="w-80 bg-gray-900/50 border-r border-gray-800/50 flex flex-col">
+    <aside className="w-full sm:w-80 h-full bg-gray-900/50 border-r border-gray-800/50 flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-800/50">
         <div className="flex items-center justify-between mb-3">
@@ -98,12 +99,12 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
                 <div className="mt-2 border-t border-gray-800/40" />
 
                 <button
-                  onClick={async () => {
+                    onClick={async () => {
                     try {
                       setMenuOpen(false);
                       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
                     } catch (err) {
-                      console.error('Logout failed', err);
+                      logger.error('Logout failed', err);
                     }
                     clearToken();
                     router.push('/login');
@@ -147,14 +148,14 @@ export default function WhispersSidebar({ userId, selectedWhisper, onSelectWhisp
                 onClick={() => onSelectWhisper(whisper)}
                 className={`p-4 border-b border-gray-800/30 cursor-pointer transition-all ${
                   isSelected
-                    ? 'bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-l-4 border-l-purple-500'
+                    ? 'bg-linear-to-r from-purple-600/20 to-blue-600/20 border-l-4 border-l-purple-500'
                     : 'hover:bg-gray-800/30'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
                         <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                          <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
                             {(otherUser?.username || otherUser?.email || '?')[0].toUpperCase()}
                           </div>
                           <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${presenceMap[otherUser?.id] ? 'bg-green-400' : 'bg-orange-400'}`} />

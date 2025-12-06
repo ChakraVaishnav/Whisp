@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import logger from '../../../../utils/logger';
 
 // POST - clear refresh cookie
 export async function POST() {
@@ -19,7 +20,7 @@ export async function POST() {
 
     return NextResponse.json({ ok: true }, { status: 200, headers: { 'Set-Cookie': header } });
   } catch (err) {
-    console.error('Logout error', err);
+    logger.error('Logout error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

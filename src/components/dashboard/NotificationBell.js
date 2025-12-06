@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logger from '../../utils/logger';
 
 export default function NotificationBell({ userId, onUpdate }) {
   const [notifications, setNotifications] = useState([]);
@@ -31,7 +32,7 @@ export default function NotificationBell({ userId, onUpdate }) {
         setNotifications(data.pending || []);
       }
     } catch (err) {
-      console.error('Failed to fetch notifications', err);
+      logger.error('Failed to fetch notifications', err);
     }
   };
 
@@ -49,7 +50,7 @@ export default function NotificationBell({ userId, onUpdate }) {
         onUpdate?.();
       }
     } catch (err) {
-      console.error('Failed to accept whisper', err);
+      logger.error('Failed to accept whisper', err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,7 @@ export default function NotificationBell({ userId, onUpdate }) {
         setNotifications((prev) => prev.filter((n) => n.id !== whisperId));
       }
     } catch (err) {
-      console.error('Failed to reject whisper', err);
+      logger.error('Failed to reject whisper', err);
     } finally {
       setLoading(false);
     }
@@ -116,7 +117,7 @@ export default function NotificationBell({ userId, onUpdate }) {
                   >
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
-                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm shrink-0">
                         {(notif.userA?.username || notif.userA?.email || '?')[0].toUpperCase()}
                       </div>
 

@@ -2,8 +2,65 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
+import { getFingerprint } from 'bro-auth/browser';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from "next/navigation";
+import logger from '../utils/logger';
 
 export default function Navigation() {
+  const { accessToken, setToken} = useAuth();
+  let token = accessToken;
+  const Router = useRouter();
+  useEffect(() => {
+    const tryRefresh = async () => {
+    try {
+      const fp = await getFingerprint();
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify({ fingerprint: fp.hash }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data.accessToken) return null;
+
+      setToken(data.accessToken);
+      verifyToken(data.accessToken);
+    } catch (err) {
+      logger.error("Refresh failed", err);
+      return null;
+    }
+  };
+  const verifyToken = async (token) => {
+    try {
+      const fp = await getFingerprint();
+
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ token, fingerprint: fp.hash }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.valid) {
+          Router.push("/dashboard");
+        }
+      }
+    } catch (err) {
+      logger.error("Verify error", err);
+    }
+  };
+
+  tryRefresh();
+}, []);
+
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-950/80 backdrop-blur-md border-b border-gray-800/50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
-import { generateTokens, buildRefreshCookie } from '../../../../../node_modules/bro-auth/dist/index';
+import { generateTokens, buildRefreshCookie } from 'bro-auth/core';
+import logger from '../../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -13,10 +14,10 @@ export async function POST(req) {
     const refreshSecret = normalize(process.env.REFRESH_SECRET);
     
     // DEBUG: Log secret lengths (not the secrets themselves)
-    console.log('[LOGIN] Secret lengths:', { access: accessSecret?.length, refresh: refreshSecret?.length });
+    logger.log('[LOGIN] Secret lengths:', { access: accessSecret?.length, refresh: refreshSecret?.length });
     
     if (!accessSecret || !refreshSecret) {
-      console.error('[LOGIN] Missing secrets after normalization');
+      logger.error('[LOGIN] Missing secrets after normalization');
       return NextResponse.json({ error: 'Server misconfiguration: secrets missing' }, { status: 500 });
     }
     const { email, password, fingerprint } = await req.json();
@@ -58,7 +59,7 @@ export async function POST(req) {
       { status: 200, headers: { 'Set-Cookie': cookieHeader } }
     );
   } catch (err) {
-    console.error('Login error', err);
+    logger.error('Login error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

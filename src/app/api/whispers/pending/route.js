@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import logger from '../../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -28,7 +29,7 @@ export async function GET(req) {
 
     return NextResponse.json({ pending }, { status: 200 });
   } catch (err) {
-    console.error('Fetch pending whispers error', err);
+    logger.error('Fetch pending whispers error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

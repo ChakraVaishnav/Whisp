@@ -4,9 +4,10 @@ const { Server } = require('socket.io');
 const crypto = require('crypto');
 const prisma = require('./prisma');
 // bro-auth verify helper
-const { verifyAccessToken } = require('../node_modules/bro-auth/dist/index');
+const { verifyAccessToken } = require('bro-auth/core');
 require('dotenv').config();
 const Redis = require('ioredis');
+const logger = require('./logger');
 
 const app = express();
 const httpServer = createServer(app);
@@ -39,7 +40,7 @@ function decryptMessage(cipherText, iv, tag) {
   try {
         // Handle old messages that weren't encrypted (empty iv/tag)
         if (!iv || !tag || iv === '' || tag === '') {
-          console.log('[Encryption] Old unencrypted message detected, returning as plaintext');
+          logger.log('[Encryption] Old unencrypted message detected, returning as plaintext');
           return cipherText; // Return the plaintext stored in cipherText
         }
 
@@ -55,8 +56,8 @@ function decryptMessage(cipherText, iv, tag) {
     decrypted += decipher.final('utf8');
     
     return decrypted;
-  } catch (error) {
-    console.error('[Encryption] Decryption failed:', error.message);
+    } catch (error) {
+    logger.error('[Encryption] Decryption failed:', error.message);
     return cipherText; // Return cipherText as fallback
   }
 }
@@ -76,14 +77,14 @@ let redisClient = null;
 if (REDIS_URL) {
   try {
     redisClient = new Redis(REDIS_URL);
-    redisClient.on('connect', () => console.log('[Redis] Connected to Redis for presence'));
-    redisClient.on('error', (err) => console.error('[Redis] Client Error', err));
+    redisClient.on('connect', () => logger.log('[Redis] Connected to Redis for presence'));
+    redisClient.on('error', (err) => logger.error('[Redis] Client Error', err));
   } catch (e) {
-    console.warn('[Redis] Failed to create client:', e.message);
+    logger.warn('[Redis] Failed to create client:', e.message);
     redisClient = null;
   }
 } else {
-  console.log('[Redis] REDIS_URL not set — presence will be in-memory only via socket events');
+  logger.log('[Redis] REDIS_URL not set — presence will be in-memory only via socket events');
 }
 
 // Store active users and their socket IDs
@@ -91,7 +92,7 @@ const activeUsers = new Map();
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.auth.userId;
-  console.log(`[Socket] User connected: ${userId} (${socket.id})`);
+  logger.log(`[Socket] User connected: ${userId} (${socket.id})`);
 
   // Store user socket mapping
   if (userId) {
@@ -105,21 +106,21 @@ io.on('connection', (socket) => {
         // Broadcast presence update to all clients
         io.emit('presence-update', { userId, online: true });
       } catch (e) {
-        console.warn('[Redis] Failed to set presence:', e.message);
+        logger.warn('[Redis] Failed to set presence:', e.message);
       }
     })();
   }
 
   // Join a room for a conversation
-  socket.on('join-room', ({ roomId }) => {
+    socket.on('join-room', ({ roomId }) => {
     socket.join(roomId);
-    console.log(`[Socket] User ${userId} joined room: ${roomId}`);
+    logger.log(`[Socket] User ${userId} joined room: ${roomId}`);
   });
 
   // Leave a room
   socket.on('leave-room', ({ roomId }) => {
     socket.leave(roomId);
-    console.log(`[Socket] User ${userId} left room: ${roomId}`);
+    logger.log(`[Socket] User ${userId} left room: ${roomId}`);
   });
 
   // Get message history
@@ -154,7 +155,7 @@ io.on('connection', (socket) => {
 
       socket.emit('messages-history', decryptedMessages);
     } catch (error) {
-      console.error('[Socket] Error fetching messages:', error);
+      logger.error('[Socket] Error fetching messages:', error);
       socket.emit('error', { message: 'Failed to fetch messages' });
     }
   });
@@ -168,13 +169,13 @@ io.on('connection', (socket) => {
         const accessSecret = process.env.ACCESS_SECRET || process.env.NEXT_PUBLIC_ACCESS_SECRET;
         if (!accessSecret) throw new Error('ACCESS_SECRET missing');
         const verifyResult = verifyAccessToken(token, fingerprint, accessSecret);
-        if (!verifyResult.valid) {
-          console.warn('[Socket] Access token verification failed:', verifyResult.error);
+          if (!verifyResult.valid) {
+          logger.warn('[Socket] Access token verification failed:', verifyResult.error);
           socket.emit('error', { message: 'Not authorized' });
           return;
         }
       } catch (e) {
-        console.warn('[Socket] Authorization error:', e.message);
+        logger.warn('[Socket] Authorization error:', e.message);
         socket.emit('error', { message: 'Not authorized' });
         return;
       }
@@ -215,9 +216,9 @@ io.on('connection', (socket) => {
       const roomId = [senderId, receiverId].sort().join('-');
       socket.to(roomId).emit('new-message', messageWithPlaintext);
 
-      console.log(`[Socket] Encrypted message sent from ${senderId} to ${receiverId}`);
+      logger.log(`[Socket] Encrypted message sent from ${senderId} to ${receiverId}`);
     } catch (error) {
-      console.error('[Socket] Error sending message:', error);
+      logger.error('[Socket] Error sending message:', error);
       socket.emit('error', { message: 'Failed to send message' });
     }
   });
@@ -231,13 +232,13 @@ io.on('connection', (socket) => {
         const accessSecret = process.env.ACCESS_SECRET || process.env.NEXT_PUBLIC_ACCESS_SECRET;
         if (!accessSecret) throw new Error('ACCESS_SECRET missing');
         const verifyResult = verifyAccessToken(token, fingerprint, accessSecret);
-        if (!verifyResult.valid) {
-          console.warn('[Socket] Access token verification failed (file):', verifyResult.error);
+          if (!verifyResult.valid) {
+          logger.warn('[Socket] Access token verification failed (file):', verifyResult.error);
           socket.emit('error', { message: 'Not authorized' });
           return;
         }
       } catch (e) {
-        console.warn('[Socket] Authorization error (file):', e.message);
+        logger.warn('[Socket] Authorization error (file):', e.message);
         socket.emit('error', { message: 'Not authorized' });
         return;
       }
@@ -248,10 +249,10 @@ io.on('connection', (socket) => {
       // send to sender
       socket.emit('file-sent', payload);
       // send to room (excludes sender)
-      socket.to(roomId).emit('file-received', payload);
-      console.log(`[Socket] Relayed file from ${senderId} to ${receiverId} name=${fileName} (keyProvided=${!!keyBase64})`);
+        socket.to(roomId).emit('file-received', payload);
+      logger.log(`[Socket] Relayed file from ${senderId} to ${receiverId} name=${fileName} (keyProvided=${!!keyBase64})`);
     } catch (err) {
-      console.error('[Socket] Error relaying file:', err);
+      logger.error('[Socket] Error relaying file:', err);
       socket.emit('error', { message: 'Failed to send file' });
     }
   });
@@ -276,7 +277,7 @@ io.on('connection', (socket) => {
       if (typeof callback === 'function') callback(result);
       else socket.emit('presence-result', result);
     } catch (err) {
-      console.error('[Socket] Error in get-presence:', err.message);
+      logger.error('[Socket] Error in get-presence:', err.message);
       if (typeof callback === 'function') callback({ error: err.message });
       else socket.emit('presence-result', { error: err.message });
     }
@@ -292,23 +293,23 @@ io.on('connection', (socket) => {
           if (redisClient) await redisClient.del(`presence:${userId}`);
           io.emit('presence-update', { userId, online: false });
         } catch (e) {
-          console.warn('[Redis] Failed to remove presence:', e.message);
+          logger.warn('[Redis] Failed to remove presence:', e.message);
         }
       })();
     }
-    console.log(`[Socket] User disconnected: ${userId} (${socket.id})`);
+    logger.log(`[Socket] User disconnected: ${userId} (${socket.id})`);
   });
 });
 
 const PORT = process.env.PORT || 4000;
 httpServer.listen(PORT, () => {
-  console.log(`[Socket.IO Server] Running on port ${PORT}`);
-  console.log(`[Encryption] Using ${ENCRYPTION_KEY.length}-byte encryption key`);
+  logger.log(`[Socket.IO Server] Running on port ${PORT}`);
+  logger.log(`[Encryption] Using ${ENCRYPTION_KEY.length}-byte encryption key`);
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('[Socket.IO Server] Shutting down...');
+  logger.log('[Socket.IO Server] Shutting down...');
   await prisma.$disconnect();
   process.exit(0);
 });

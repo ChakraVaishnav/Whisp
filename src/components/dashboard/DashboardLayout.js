@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WhispersSidebar from './WhispersSidebar';
 import ChatWindow from './ChatWindow';
 import NotificationBell from './NotificationBell';
@@ -10,14 +10,40 @@ export default function DashboardLayout({ user }) {
   const [selectedWhisper, setSelectedWhisper] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileView, setMobileView] = useState('sidebar');
 
   const handleWhisperSelect = (whisper) => {
     setSelectedWhisper(whisper);
+    if (isMobile) setMobileView('chat');
   };
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
+
+  const handleBackToList = () => {
+    setMobileView('sidebar');
+  };
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileView('sidebar');
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile && !selectedWhisper) {
+      setMobileView('sidebar');
+    }
+  }, [isMobile, selectedWhisper]);
 
   return (
     <SocketProvider userId={user?.id}>
@@ -37,21 +63,47 @@ export default function DashboardLayout({ user }) {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left Sidebar - Whispers List */}
-        <WhispersSidebar
-          userId={user?.id}
-          selectedWhisper={selectedWhisper}
-          onSelectWhisper={handleWhisperSelect}
-          onAddClick={() => setShowAddModal(true)}
-          refreshKey={refreshKey}
-        />
+      <div className="flex-1 flex overflow-hidden min-h-0 relative">
+        {isMobile ? (
+          <>
+            {mobileView === 'sidebar' && (
+              <div className="absolute inset-0">
+                <WhispersSidebar
+                  userId={user?.id}
+                  selectedWhisper={selectedWhisper}
+                  onSelectWhisper={handleWhisperSelect}
+                  onAddClick={() => setShowAddModal(true)}
+                  refreshKey={refreshKey}
+                />
+              </div>
+            )}
 
-        {/* Main Chat Area */}
-        <ChatWindow
-          selectedWhisper={selectedWhisper}
-          currentUserId={user?.id}
-        />
+            {mobileView === 'chat' && (
+              <div className="absolute inset-0">
+                <ChatWindow
+                  selectedWhisper={selectedWhisper}
+                  currentUserId={user?.id}
+                  onBack={handleBackToList}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <WhispersSidebar
+              userId={user?.id}
+              selectedWhisper={selectedWhisper}
+              onSelectWhisper={handleWhisperSelect}
+              onAddClick={() => setShowAddModal(true)}
+              refreshKey={refreshKey}
+            />
+
+            <ChatWindow
+              selectedWhisper={selectedWhisper}
+              currentUserId={user?.id}
+            />
+          </>
+        )}
       </div>
 
       {/* Add Whisper Modal */}

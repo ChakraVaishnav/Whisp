@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import logger from '../utils/logger';
 
 const SocketContext = createContext(null);
 
@@ -20,17 +21,17 @@ export function SocketProvider({ children, userId }) {
     });
 
     socketInstance.on('connect', () => {
-      console.log('[Socket] Connected to server');
+      logger.log('[Socket] Connected to server');
       setConnected(true);
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('[Socket] Disconnected from server');
+      logger.log('[Socket] Disconnected from server');
       setConnected(false);
     });
 
     socketInstance.on('connect_error', (error) => {
-      console.error('[Socket] Connection error:', error);
+      logger.error('[Socket] Connection error:', error);
     });
 
     setSocket(socketInstance);

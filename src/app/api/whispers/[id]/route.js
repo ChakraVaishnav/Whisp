@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import logger from '../../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -28,7 +29,7 @@ export async function PATCH(req, { params }) {
 
     return NextResponse.json({ whisper }, { status: 200 });
   } catch (err) {
-    console.error('Update whisper error', err);
+    logger.error('Update whisper error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -44,7 +45,7 @@ export async function DELETE(req, { params }) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
-    console.error('Delete whisper error', err);
+    logger.error('Delete whisper error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

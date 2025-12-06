@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import logger from '../../utils/logger';
 
 export default function AddWhisperModal({ userId, onClose, onSuccess }) {
   const [search, setSearch] = useState('');
@@ -20,7 +21,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
         setResults(data.users || []);
       }
     } catch (err) {
-      console.error('Search failed', err);
+      logger.error('Search failed', err);
     } finally {
       setLoading(false);
     }
@@ -43,7 +44,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess }) {
         onClose();
       }
     } catch (err) {
-      console.error('Failed to send whisper request', err);
+      logger.error('Failed to send whisper request', err);
     } finally {
       setSending(null);
     }

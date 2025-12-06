@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import logger from '../../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -65,7 +66,7 @@ export async function GET(req) {
 
     return NextResponse.json({ users }, { status: 200 });
   } catch (err) {
-    console.error('Search users error', err);
+    logger.error('Search users error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

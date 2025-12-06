@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { verifyAccessToken } from '../../../../../node_modules/bro-auth/dist/index';
+import { verifyAccessToken } from 'bro-auth/core';
+import logger from '../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -50,7 +51,7 @@ export async function GET(req) {
 
     return NextResponse.json({ messages }, { status: 200 });
   } catch (err) {
-    console.error('Fetch messages error', err);
+    logger.error('Fetch messages error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -94,7 +95,7 @@ export async function POST(req) {
 
     return NextResponse.json({ message: newMessage }, { status: 201 });
   } catch (err) {
-    console.error('Send message error', err);
+    logger.error('Send message error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFingerprint } from "bro-auth/browser";
 import { useAuth } from '../../context/AuthContext';
+import logger from '../../utils/logger';
 export default function SignupPage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -23,9 +24,10 @@ export default function SignupPage() {
     const { name, value } = e.target;
     // debug: log change events
     try {
-      // eslint-disable-next-line no-console
-      console.log('signup handleChange', name, value);
-    } catch (e) {}
+      logger.log('signup handleChange', name, value);
+    } catch (e) {
+      /* ignore */
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

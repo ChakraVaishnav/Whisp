@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getFingerprint } from "bro-auth/browser";
 import { useAuth } from "../../context/AuthContext";
+import logger from '../../utils/logger';
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 
 export default function DashboardPage() {
@@ -61,7 +62,7 @@ export default function DashboardPage() {
       });
       return res.json();
     } catch (err) {
-      console.error("Verify error", err);
+      logger.error("Verify error", err);
       return { valid: false };
     }
   };
@@ -87,7 +88,7 @@ export default function DashboardPage() {
       setToken(data.accessToken);
       return data.accessToken;
     } catch (err) {
-      console.error("Refresh failed", err);
+      logger.error("Refresh failed", err);
       return null;
     }
   };

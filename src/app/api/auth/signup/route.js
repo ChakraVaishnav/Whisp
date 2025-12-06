@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
-import { generateTokens, buildRefreshCookie } from '../../../../../node_modules/bro-auth/dist/index';
+import { generateTokens, buildRefreshCookie } from 'bro-auth/core';
+import logger from '../../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -13,7 +14,7 @@ export async function POST(req) {
     const refreshSecret = normalize(process.env.REFRESH_SECRET);
     
     if (!accessSecret || !refreshSecret) {
-      console.error('Missing ACCESS_SECRET or REFRESH_SECRET in environment');
+      logger.error('Missing ACCESS_SECRET or REFRESH_SECRET in environment');
       return NextResponse.json({ error: 'Server misconfiguration: secrets missing' }, { status: 500 });
     }
     const body = await req.json();
@@ -65,7 +66,7 @@ export async function POST(req) {
       { status: 201, headers: { 'Set-Cookie': cookieHeader } }
     );
   } catch (err) {
-    console.error('Signup error', err);
+    logger.error('Signup error', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   } finally {
     // prisma.$disconnect(); // keep client for reuse in dev

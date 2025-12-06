@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { verifyAccessToken } from '../../../../../node_modules/bro-auth/dist/index';
+import { verifyAccessToken } from 'bro-auth/core';
 import { PrismaClient } from '@prisma/client';
+import logger from '../../../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,7 @@ export async function POST(req) {
     const normalize = (s) => (typeof s === 'string' ? s.trim().replace(/^['"]|['"]$/g, '') : s);
     const accessSecret = normalize(process.env.ACCESS_SECRET);
     if (!accessSecret) {
-      console.error('[VERIFY] Missing ACCESS_SECRET');
+      logger.error('[VERIFY] Missing ACCESS_SECRET');
       return NextResponse.json({ valid: false, error: 'Server misconfigured' }, { status: 500 });
     }
 
@@ -48,7 +49,7 @@ export async function POST(req) {
 
     return NextResponse.json({ valid: true, payload: result.payload }, { status: 200 });
   } catch (err) {
-    console.error('Verify error', err);
+    logger.error('Verify error', err);
     return NextResponse.json({ valid: false, error: 'Internal error' }, { status: 500 });
   }
 }

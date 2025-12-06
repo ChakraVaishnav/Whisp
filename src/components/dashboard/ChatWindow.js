@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 import { useSocket } from '../../context/SocketContext';
 import { getFingerprint } from 'bro-auth/browser';
 import { useAuth } from '../../context/AuthContext';
+import logger from '../../utils/logger';
 
-export default function ChatWindow({ selectedWhisper, currentUserId }) {
+export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -16,6 +17,8 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
   const [otherOnline, setOtherOnline] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiList = ['😀', '😂', '😍', '🎉', '👍', '🔥', '🤝', '✨'];
 
   useEffect(() => {
     if (!socket || !selectedWhisper) return;
@@ -83,7 +86,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
           setMessages((prev) => [...prev, fileMessage]);
         }
       } catch (e) {
-        console.error('Failed to handle incoming file', e);
+        logger.error('Failed to handle incoming file', e);
       }
     });
 
@@ -120,6 +123,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
+    setShowEmojiPicker(false);
     if (!selectedWhisper || sending || !socket || !connected) return;
 
     const otherUser = selectedWhisper.userAId === currentUserId ? selectedWhisper.userB : selectedWhisper.userA;
@@ -190,7 +194,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
         }
       }
     } catch (err) {
-      console.error('Send error', err);
+      logger.error('Send error', err);
     } finally {
       setNewMessage('');
       setSending(false);
@@ -207,11 +211,18 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
     e.target.value = '';
   };
 
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
+  };
+
   if (!selectedWhisper) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-950">
         <div className="text-center">
-          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
+          <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-linear-to-br from-purple-600/20 to-blue-600/20 flex items-center justify-center">
             <span className="text-4xl">💬</span>
           </div>
           <h3 className="text-xl font-semibold text-white mb-2">Select a Whisper</h3>
@@ -224,11 +235,21 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
   const otherUser = selectedWhisper.userAId === currentUserId ? selectedWhisper.userB : selectedWhisper.userA;
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-950 min-h-0">
+    <div className="flex-1 flex flex-col bg-gray-950 min-h-0 h-full">
       {/* Chat Header */}
       <div className="bg-gray-900/50 border-b border-gray-800/50 px-6 py-4 flex items-center gap-3">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="p-2 rounded-md bg-gray-800/40 text-white hover:bg-gray-800/60 transition-all"
+            aria-label="Back to whispers"
+          >
+            ←
+          </button>
+        )}
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold">
               {(otherUser?.username || otherUser?.email || '?')[0].toUpperCase()}
             </div>
             <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${otherOnline ? 'bg-green-400' : 'bg-orange-400'}`} />
@@ -291,21 +312,52 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSend} className="bg-gray-900/50 border-t border-gray-800/50 p-4">
+      <form onSubmit={handleSend} className="bg-gray-900/50 border-t border-gray-800/50 p-4 sticky bottom-0 z-10">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={triggerFileSelect} className="w-10 h-10 rounded-full bg-gray-800/60 flex items-center justify-center text-white hover:bg-gray-800/80">
-            <span className="text-xl">＋</span>
-          </button>
-          <input ref={fileInputRef} type="file" onChange={onFileSelected} className="hidden" />
+          <div className="relative flex items-center gap-2">
+            <button type="button" onClick={triggerFileSelect} className="w-10 h-10 rounded-full bg-gray-800/60 flex items-center justify-center text-white hover:bg-gray-800/80">
+              <span className="text-xl">＋</span>
+            </button>
+            <input ref={fileInputRef} type="file" onChange={onFileSelected} className="hidden" />
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker((prev) => !prev)}
+                className="w-10 h-10 rounded-full bg-gray-800/60 flex items-center justify-center text-white hover:bg-gray-800/80"
+                aria-label="Insert emoji"
+              >
+                <span className="text-xl">😊</span>
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full mb-2 right-0 w-44 bg-gray-900/90 border border-gray-800 rounded-xl shadow-lg p-2 grid grid-cols-4 gap-1 z-20">
+                  {emojiList.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        setNewMessage((prev) => prev + emoji);
+                        setShowEmojiPicker(false);
+                      }}
+                      className="text-lg leading-none rounded-md hover:bg-gray-800/70"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="flex-1">
-            <input
-              type="text"
+            <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleInputKeyDown}
               placeholder={selectedFile ? `File ready: ${selectedFile.name}` : 'Type a message...'}
               disabled={sending || !connected}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all disabled:opacity-50"
+              rows={1}
+              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all disabled:opacity-50 resize-none"
             />
             {selectedFile && (
               <div className="text-xs text-gray-400 mt-1 flex items-center justify-between">
@@ -320,7 +372,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId }) {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={(!newMessage.trim() && !selectedFile) || sending || !connected}
-            className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-purple-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 rounded-lg bg-linear-to-r from-purple-600 to-blue-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-purple-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? 'Sending...' : 'Send'}
           </motion.button>
