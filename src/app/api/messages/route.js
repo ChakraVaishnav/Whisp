@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from 'bro-auth/core';
 import logger from '../../../utils/logger';
-import { getPrismaClient } from '../../../lib/prismaClient';
+import { getPrismaClient } from '../../../lib/prisma';
 
 
 // GET - Fetch messages for a whisper (conversation)

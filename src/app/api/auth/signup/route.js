@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { generateTokens, buildRefreshCookie } from 'bro-auth/core';
 import logger from '../../../../utils/logger';
-import { getPrismaClient } from '../../../../lib/prismaClient';
+import { getPrismaClient } from '../../../../lib/prisma';
 
 
 export async function POST(req) {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import logger from '../../../../utils/logger';
-import { getPrismaClient } from '../../../../lib/prismaClient';
+import { getPrismaClient } from '../../../../lib/prisma';
 
 
 // PATCH - Accept a whisper request
