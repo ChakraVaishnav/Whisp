@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { generateTokens, buildRefreshCookie } from 'bro-auth/core';
 import logger from '../../../../utils/logger';
-import { getPrismaClient } from '../../../../lib/prisma';
+import prisma from '@/lib/prisma';
 
 
 export async function POST(req) {
@@ -19,15 +19,6 @@ export async function POST(req) {
       logger.error('[LOGIN] Missing secrets after normalization');
       return NextResponse.json({ error: 'Server misconfiguration: secrets missing' }, { status: 500 });
     }
-    const prisma = getPrismaClient();
-    if (!prisma) {
-      logger.error('[LOGIN] Prisma client unavailable');
-      return NextResponse.json(
-        { error: 'Database connection is not configured' },
-        { status: 500 }
-      );
-    }
-
     const { email, password, fingerprint } = await req.json();
     if (!email || !password || !fingerprint) {
       return NextResponse.json({ error: 'Email, password and fingerprint are required' }, { status: 400 });
