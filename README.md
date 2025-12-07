@@ -123,6 +123,14 @@ Key integrations:
 - Run `npm run storybook` (if available) or build the UI locally and use `npx playwright open http://localhost:3000` for automated screenshotting.
 - Replace the OG/Twitter card assets in `public/` and update paths referenced in `src/app/layout.js` to keep marketing imagery on brand.
 
+| Preview | Description |
+| --- | --- |
+| ![Landing page](public/landingpage.png) | Home view with status columns, quick actions, and hero banner. |
+| ![Features](public/Features.png) | Feature highlights and badge list describing secure messaging capabilities. |
+| ![Login](public/login.png) | Tokened login flow with bro-auth prompt. |
+| ![Signup](public/signup.png) | Onboarding screen showing token request form. |
+| ![Chat](public/chat.png) | Messaging canvas with encrypted bubbles, send controls, and typing indicator. |
+
 ---
 
 ## 🤝 Contributing
