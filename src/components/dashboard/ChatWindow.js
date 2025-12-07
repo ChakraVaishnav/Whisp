@@ -15,6 +15,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [sending, setSending] = useState(false);
   const [otherOnline, setOtherOnline] = useState(false);
+  const pendingEmitsRef = useRef([]);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -152,6 +153,14 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
     };
   }, [socket, selectedWhisper, otherUser]);
 
+  useEffect(() => {
+    if (!socket || !connected) return;
+    const queued = pendingEmitsRef.current;
+    if (queued.length === 0) return;
+    pendingEmitsRef.current = [];
+    queued.forEach((payload) => socket.emit("send-message", payload));
+  }, [connected, socket]);
+
   // Auto-scroll
   useLayoutEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -238,19 +247,23 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
       }
 
       // 🔹 Sending text message
-      if (newMessage.trim()) {
+        if (newMessage.trim()) {
         const msgText = newMessage.trim();
 
-        // Send realtime
-        socket.emit("send-message", {
+        const payload = {
           senderId: currentUserId,
           receiverId,
           message: msgText,
           token: accessToken,
           fingerprint: fp.hash,
-        });
+        };
 
-        // Persist to DB
+        if (connected) {
+          socket.emit("send-message", payload);
+        } else {
+          pendingEmitsRef.current = [...pendingEmitsRef.current, payload];
+        }
+
         await fetch("/api/messages", {
           method: "POST",
           headers: {
@@ -324,7 +337,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
 
 
       {/* MESSAGES */}
-      <div className="flex-1 min-h-0 p-4 overflow-y-auto space-y-3">
+      <div className="flex-1 min-h-0 p-4 overflow-y-auto flex flex-col space-y-3">
         {messages.map((msg, idx) => {
           const mine = msg.senderId === currentUserId;
 
@@ -370,7 +383,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
       {/* INPUT BAR */}
       <form
         onSubmit={handleSend}
-        className="p-4 bg-gray-900/50 border-t border-gray-800 flex flex-col gap-3"
+        className="mt-auto p-4 bg-gray-900/50 border-t border-gray-800 flex flex-col gap-3"
       >
         <div className="flex items-end gap-3">
           <button
