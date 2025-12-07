@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import FeatureCard from './FeatureCard';
 
@@ -76,6 +77,21 @@ export default function FeaturesSection() {
           {features.map((feature) => (
             <FeatureCard key={feature.id} feature={feature} />
           ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true }}
+          className="text-center mt-12"
+        >
+          <Link
+            href="#contact"
+            className="inline-flex items-center gap-2 rounded-full border border-blue-500/60 px-6 py-3 text-sm font-semibold text-blue-300 transition-all hover:bg-blue-500/10"
+          >
+            Have a question? Start a conversation
+          </Link>
         </motion.div>
       </div>
     </section>

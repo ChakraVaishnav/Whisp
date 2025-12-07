@@ -90,9 +90,6 @@ export default function Navigation() {
           <Link href="#security" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
             Security
           </Link>
-          <Link href="#download" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
-            Download
-          </Link>
           <Link href="#contact" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
             Contact
           </Link>

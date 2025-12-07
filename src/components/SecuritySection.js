@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const containerVariants = {
@@ -92,6 +93,13 @@ export default function SecuritySection() {
                 </motion.div>
               ))}
             </div>
+
+            <Link
+              href="#contact"
+              className="inline-flex items-center gap-2 rounded-full border border-blue-500/70 px-5 py-3 text-sm font-bold text-blue-200 transition-all hover:bg-blue-500/10"
+            >
+              Questions about security? Contact us
+            </Link>
           </motion.div>
         </motion.div>
       </div>

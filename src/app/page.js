@@ -3,8 +3,9 @@ import HeroSection from '@/components/HeroSection';
 import FeaturesSection from '@/components/FeaturesSection';
 import SecuritySection from '@/components/SecuritySection';
 import ShowcaseSection from '@/components/ShowcaseSection';
-import CTASection from '@/components/CTASection';
 import Footer from '@/components/Footer';
+import CTASection from '@/components/CTASection';
+import ContactSection from '@/components/ContactSection';
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <FeaturesSection />
       <SecuritySection />
       <ShowcaseSection />
+      <ContactSection />
       <CTASection />
       <Footer />
     </main>

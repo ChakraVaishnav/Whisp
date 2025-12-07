@@ -1,6 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
+
+const CONTACT_EMAIL = 'guntakachakravaishnavreddy@gmail.com';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -64,8 +67,20 @@ export default function ShowcaseSection() {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <button className="p-2 hover:bg-white/10 rounded-lg transition">📞</button>
-                  <button className="p-2 hover:bg-white/10 rounded-lg transition">ℹ️</button>
+                  <Link
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    className="p-2 hover:bg-white/10 rounded-lg transition"
+                    aria-label="Email the Whisp team"
+                  >
+                    📞
+                  </Link>
+                  <Link
+                    href="#contact"
+                    className="p-2 hover:bg-white/10 rounded-lg transition"
+                    aria-label="See contact options"
+                  >
+                    ℹ️
+                  </Link>
                 </div>
               </div>
 

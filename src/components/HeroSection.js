@@ -60,9 +60,9 @@ export default function HeroSection() {
               <Link href="/signup" className="px-8 py-4 rounded-lg bg-linear-to-r from-blue-600 to-purple-600 text-white font-semibold hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 transform hover:scale-105 text-center">
                 Get Started
               </Link>
-              <button className="px-8 py-4 rounded-lg border-2 border-gray-300 text-gray-800 font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-300">
+              <Link href="/dashboard" className="px-8 py-4 rounded-lg border-2 border-gray-300 text-gray-800 font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 text-center">
                 Open App
-              </button>
+              </Link>
             </motion.div>
           </div>
 

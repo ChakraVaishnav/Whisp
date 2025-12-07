@@ -6,16 +6,11 @@ import { motion } from 'framer-motion';
 const footerLinks = [
   { label: 'Features', href: '#features' },
   { label: 'Security', href: '#security' },
-  { label: 'Download', href: '#download' },
   { label: 'Contact', href: '#contact' },
+  { label: 'Docs', href: 'https://github.com/ChakraVaishnav/Whisp#readme' },
 ];
 
-const socialLinks = [
-  { icon: '𝕏', href: '#' },
-  { icon: '🔗', href: '#' },
-  { icon: '📧', href: '#' },
-  { icon: '🐙', href: '#' },
-];
+const EMAIL = 'guntakachakravaishnavreddy@gmail.com';
 
 export default function Footer() {
   return (
@@ -44,16 +39,21 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Product</h4>
             <ul className="space-y-2">
-              {footerLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors text-sm"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {footerLinks.map((link) => {
+                const isExternal = link.href.startsWith('http');
+                return (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-gray-400 hover:text-white transition-colors text-sm"
+                      target={isExternal ? '_blank' : undefined}
+                      rel={isExternal ? 'noreferrer' : undefined}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -71,20 +71,21 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Social */}
           <div>
             <h4 className="font-semibold mb-4">Connect</h4>
-            <div className="flex gap-3">
-              {socialLinks.map((social, idx) => (
-                <motion.a
-                  key={idx}
-                  href={social.href}
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  className="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors text-lg"
-                >
-                  {social.icon}
-                </motion.a>
-              ))}
+            <p className="text-gray-400 text-sm mb-3">
+              Questions about deployment, security, or APIs? Reach out and we will reply in one business day.
+            </p>
+            <div className="space-y-2 text-sm">
+              <Link
+                href={`mailto:${EMAIL}`}
+                className="block text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                {EMAIL}
+              </Link>
+              <Link href="#contact" className="block text-blue-400 hover:text-blue-300 transition-colors">
+                Open the contact form
+              </Link>
             </div>
           </div>
         </motion.div>
@@ -98,7 +99,7 @@ export default function Footer() {
           className="flex flex-col md:flex-row items-center justify-between pt-8"
         >
           <p className="text-gray-400 text-sm">
-            © 2024 Whisp. All rights reserved. Made with ❤️ for privacy.
+            © 2025 Whisp. All rights reserved. Made with ❤️ for privacy.
           </p>
           <div className="mt-4 md:mt-0 flex gap-6 text-gray-400 text-sm">
             <Link href="#" className="hover:text-white transition-colors">

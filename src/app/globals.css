@@ -1,2 +1,6 @@
 @import "tailwindcss";
 
+:where(button, a) {
+	cursor: pointer;
+}
+
