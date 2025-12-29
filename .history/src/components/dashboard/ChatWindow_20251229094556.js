@@ -20,8 +20,8 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  const { connected, socket } = useSocket();
-  const { accessToken, authFetch } = useAuth();
+  const { socket, connected } = useSocket();
+  const { accessToken } = useAuth();
 
   // Determine other user
   const otherUser = selectedWhisper
@@ -37,10 +37,20 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
 
     const fetchHistory = async () => {
       try {
-        const res = await authFetch(
+        const res = await fetch(
           `/api/messages?senderId=${currentUserId}&receiverId=${otherUser.id}`, {
-          method: "GET",
-        });
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            senderId: currentUserId,
+            receiverId,
+            message: msgText,
+            fingerprint: fp.hash,
+          }),
+      });
         const data = await res.json();
 
         setMessages(
@@ -209,12 +219,12 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
         const rawKey = await crypto.subtle.exportKey("raw", key);
 
         const encode = (buf) => {
-          const bytes = new Uint8Array(buf);
-          let binary = "";
-          for (let i = 0; i < bytes.length; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          return btoa(binary);
+        const bytes = new Uint8Array(buf);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
         };
 
 
@@ -248,7 +258,7 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
       }
 
       // 🔹 Sending text message
-      if (newMessage.trim()) {
+        if (newMessage.trim()) {
         const msgText = newMessage.trim();
 
         const payload = {
@@ -265,8 +275,12 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
           pendingEmitsRef.current = [...pendingEmitsRef.current, payload];
         }
 
-        await authFetch("/api/messages", {
+        await fetch("/api/messages", {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
           body: JSON.stringify({
             senderId: currentUserId,
             receiverId,
@@ -300,11 +314,11 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
 
         {onBack && (
           <button
-            onClick={onBack}
-            className="px-5 py-2 rounded-full bg-gray-800 text-white border border-gray-700"
-          >
-            ←
-          </button>
+  onClick={onBack}
+  className="px-5 py-2 rounded-full bg-gray-800 text-white border border-gray-700"
+>
+  ←
+</button>
 
         )}
 
@@ -313,8 +327,9 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
             {(displayName[0] || "?").toUpperCase()}
           </div>
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${otherOnline ? "bg-green-400" : "bg-orange-400"
-              }`}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${
+              otherOnline ? "bg-green-400" : "bg-orange-400"
+            }`}
           />
         </div>
 
@@ -345,10 +360,11 @@ export default function ChatWindow({ selectedWhisper, currentUserId, onBack }) {
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`max-w-md px-4 py-2 rounded-2xl ${mine
-                  ? "bg-linear-to-r from-purple-600 to-blue-600 text-white"
-                  : "bg-gray-800 text-white"
-                  }`}
+                className={`max-w-md px-4 py-2 rounded-2xl ${
+                  mine
+                    ? "bg-linear-to-r from-purple-600 to-blue-600 text-white"
+                    : "bg-gray-800 text-white"
+                }`}
               >
                 {msg.fileUrl ? (
                   <a

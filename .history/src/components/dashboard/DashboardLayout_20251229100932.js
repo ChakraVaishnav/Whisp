@@ -46,7 +46,7 @@ export default function DashboardLayout({ user, accessToken }) {
 
           <div className="flex items-center gap-4">
             <h1 className="text-sm text-gray-400">Welcome, {user?.name || user?.username}</h1>
-            <NotificationBell userId={user?.id} onUpdate={handleRefresh} accessToken={accessToken} />
+            <NotificationBell userId={user?.id} onUpdate={handleRefresh} />
           </div>
         </header>
 
@@ -85,7 +85,7 @@ export default function DashboardLayout({ user, accessToken }) {
           ) : (
             /* DESKTOP VIEW */
             <>
-
+            
               <WhispersSidebar
                 userId={user?.id}
                 selectedWhisper={selectedWhisper}

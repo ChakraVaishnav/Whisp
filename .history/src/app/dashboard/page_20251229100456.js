@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const [valid, setValid] = useState(false);
   const [user, setUser] = useState(null);
   const router = useRouter();
-  const { accessToken, setToken, clearToken, refreshAccessToken } = useAuth();
+  const { accessToken, setToken, clearToken } = useAuth();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -29,9 +29,9 @@ export default function DashboardPage() {
       }
 
       // 2️⃣ If verify failed or token missing → try refresh
-      const refreshedToken = await refreshAccessToken();
-      if (refreshedToken) {
-        const ok2 = await verifyToken(refreshedToken);
+      const refreshed = await tryRefresh();
+      if (refreshed) {
+        const ok2 = await verifyToken(refreshed);
         if (ok2.valid) {
           setValid(true);
           setUser(ok2.payload);
@@ -46,7 +46,7 @@ export default function DashboardPage() {
     };
 
     checkSession();
-  }, [accessToken, router, setToken, clearToken, refreshAccessToken]);
+  }, [accessToken, router, setToken, clearToken]);
 
   // ------------------------------
   // Helper: Verify token
@@ -68,6 +68,32 @@ export default function DashboardPage() {
   };
 
   // ------------------------------
+  // Helper: Try refresh
+  // ------------------------------
+  const tryRefresh = async () => {
+    try {
+      const fp = await getFingerprint();
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify({ fingerprint: fp.hash }),
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data.accessToken) return null;
+
+      setToken(data.accessToken);
+      return data.accessToken;
+    } catch (err) {
+      logger.error("Refresh failed", err);
+      return null;
+    }
+  };
+
+  // ------------------------------
 
   if (loading)
     return (
@@ -81,5 +107,5 @@ export default function DashboardPage() {
 
   if (!valid) return null;
 
-  return <DashboardLayout user={user} accessToken={accessToken} />;
+  return <DashboardLayout user={user} accessToken={accessToken}/>;
 }

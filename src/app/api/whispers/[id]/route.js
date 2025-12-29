@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-helper';
 import logger from '../../../../utils/logger';
 import prisma from '@/lib/prisma';
 
@@ -6,6 +7,9 @@ import prisma from '@/lib/prisma';
 // PATCH - Accept a whisper request
 export async function PATCH(req, { params }) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { id } = await params;
     const { status } = await req.json();
 
@@ -36,6 +40,9 @@ export async function PATCH(req, { params }) {
 // DELETE - Reject/delete a whisper request
 export async function DELETE(req, { params }) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { id } = await params;
 
     await prisma.whisper.delete({

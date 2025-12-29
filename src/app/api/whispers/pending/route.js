@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-helper';
 import logger from '../../../../utils/logger';
 import prisma from '@/lib/prisma';
 
@@ -6,6 +7,9 @@ import prisma from '@/lib/prisma';
 // GET - Fetch pending whisper requests for a user
 export async function GET(req) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 

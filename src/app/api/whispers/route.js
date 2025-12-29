@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-helper';
 import logger from '../../../utils/logger';
 import prisma from '@/lib/prisma';
 
@@ -6,6 +7,9 @@ import prisma from '@/lib/prisma';
 // GET - Fetch accepted whispers for a user
 export async function GET(req) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
@@ -41,6 +45,9 @@ export async function GET(req) {
 // POST - Create a new whisper request
 export async function POST(req) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { userAId, userBId } = await req.json();
 
     if (!userAId || !userBId) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyAccessToken } from 'bro-auth/core';
+import { verifyAuth } from '@/lib/auth-helper';
 import logger from '../../../utils/logger';
 import prisma from '@/lib/prisma';
 
@@ -7,6 +7,9 @@ import prisma from '@/lib/prisma';
 // GET - Fetch messages for a whisper (conversation)
 export async function GET(req) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { searchParams } = new URL(req.url);
     const whisperId = searchParams.get('whisperId');
     const senderId = searchParams.get('senderId');
@@ -58,20 +61,12 @@ export async function GET(req) {
 // POST - Send a new message
 export async function POST(req) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const body = await req.json();
     const { senderId, receiverId, message, fingerprint } = body;
 
-    // Verify access token from Authorization header
-    const auth = req.headers.get('authorization') || '';
-    const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-    const accessSecret = process.env.ACCESS_SECRET;
-    if (!token || !fingerprint || !accessSecret) {
-      return NextResponse.json({ error: 'Authorization required' }, { status: 401 });
-    }
-    const verifyResult = verifyAccessToken(token, fingerprint, accessSecret);
-    if (!verifyResult.valid) {
-      return NextResponse.json({ error: 'Invalid access token' }, { status: 401 });
-    }
     if (!senderId || !receiverId || !message) {
       return NextResponse.json({ error: 'senderId, receiverId, and message required' }, { status: 400 });
     }

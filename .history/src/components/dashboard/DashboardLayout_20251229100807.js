@@ -5,6 +5,7 @@ import ChatWindow from "./ChatWindow";
 import NotificationBell from "./NotificationBell";
 import AddWhisperModal from "./AddWhisperModal";
 import { SocketProvider } from "../../context/SocketContext";
+import { ac } from "@upstash/redis/zmscore-DhpQcqpW";
 
 export default function DashboardLayout({ user, accessToken }) {
   const [selectedWhisper, setSelectedWhisper] = useState(null);
@@ -46,7 +47,7 @@ export default function DashboardLayout({ user, accessToken }) {
 
           <div className="flex items-center gap-4">
             <h1 className="text-sm text-gray-400">Welcome, {user?.name || user?.username}</h1>
-            <NotificationBell userId={user?.id} onUpdate={handleRefresh} accessToken={accessToken} />
+            <NotificationBell userId={user?.id} onUpdate={handleRefresh} />
           </div>
         </header>
 
@@ -85,7 +86,7 @@ export default function DashboardLayout({ user, accessToken }) {
           ) : (
             /* DESKTOP VIEW */
             <>
-
+            
               <WhispersSidebar
                 userId={user?.id}
                 selectedWhisper={selectedWhisper}

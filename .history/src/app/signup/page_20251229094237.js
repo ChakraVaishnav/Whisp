@@ -148,13 +148,14 @@ export default function SignupPage() {
           transition={{ duration: 0.5 }}
           className="w-full order-1 lg:order-2"
         >
-          {/* Back Button - Always visible, formal */}
+          {/* Back Button - Mobile */}
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-6 group text-sm"
-            aria-label="Back to home"
+            className="inline-flex lg:hidden items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 group text-sm"
           >
-            <span className="text-lg font-bold">&#8592;</span>
+            <motion.span whileHover={{ x: -3 }} className="text-lg">
+              ←
+            </motion.span>
             Back
           </Link>
 

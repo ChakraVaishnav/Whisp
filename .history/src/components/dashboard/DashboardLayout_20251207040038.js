@@ -6,7 +6,7 @@ import NotificationBell from "./NotificationBell";
 import AddWhisperModal from "./AddWhisperModal";
 import { SocketProvider } from "../../context/SocketContext";
 
-export default function DashboardLayout({ user, accessToken }) {
+export default function DashboardLayout({ user }) {
   const [selectedWhisper, setSelectedWhisper] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -46,7 +46,7 @@ export default function DashboardLayout({ user, accessToken }) {
 
           <div className="flex items-center gap-4">
             <h1 className="text-sm text-gray-400">Welcome, {user?.name || user?.username}</h1>
-            <NotificationBell userId={user?.id} onUpdate={handleRefresh} accessToken={accessToken} />
+            <NotificationBell userId={user?.id} onUpdate={handleRefresh} />
           </div>
         </header>
 
@@ -66,7 +66,6 @@ export default function DashboardLayout({ user, accessToken }) {
                     refreshKey={refreshKey}
                     showBell
                     onNotificationUpdate={handleRefresh}
-                    accessToken={accessToken}
                   />
                 </div>
               )}
@@ -77,7 +76,6 @@ export default function DashboardLayout({ user, accessToken }) {
                     selectedWhisper={selectedWhisper}
                     currentUserId={user?.id}
                     onBack={handleBackToList}
-                    accessToken={accessToken}
                   />
                 </div>
               )}
@@ -85,21 +83,19 @@ export default function DashboardLayout({ user, accessToken }) {
           ) : (
             /* DESKTOP VIEW */
             <>
-
+            
               <WhispersSidebar
                 userId={user?.id}
                 selectedWhisper={selectedWhisper}
                 onSelectWhisper={handleWhisperSelect}
                 onAddClick={() => setShowAddModal(true)}
                 refreshKey={refreshKey}
-                accessToken={accessToken}
               />
 
               <div className="flex flex-col flex-1 min-h-0">
                 <ChatWindow
                   selectedWhisper={selectedWhisper}
                   currentUserId={user?.id}
-                  accessToken={accessToken}
                 />
               </div>
             </>
@@ -112,7 +108,6 @@ export default function DashboardLayout({ user, accessToken }) {
             userId={user?.id}
             onClose={() => setShowAddModal(false)}
             onSuccess={handleRefresh}
-            accessToken={accessToken}
           />
         )}
       </div>

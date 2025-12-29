@@ -2,12 +2,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logger from '../../utils/logger';
-import { useAuth } from "../../context/AuthContext";
 
-import { getFingerprint } from "bro-auth/browser";
-
-export default function AddWhisperModal({ userId, onClose, onSuccess, accessToken }) {
-  const { authFetch } = useAuth();
+export default function AddWhisperModal({ userId, onClose, onSuccess }) {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,7 +15,7 @@ export default function AddWhisperModal({ userId, onClose, onSuccess, accessToke
 
     setLoading(true);
     try {
-      const res = await authFetch(`/api/users/search?query=${encodeURIComponent(search)}&usernameOnly=1&me=${encodeURIComponent(userId)}`);
+      const res = await fetch(`/api/users/search?query=${encodeURIComponent(search)}&usernameOnly=1&me=${encodeURIComponent(userId)}`);
       if (res.ok) {
         const data = await res.json();
         setResults(data.users || []);
@@ -34,12 +30,18 @@ export default function AddWhisperModal({ userId, onClose, onSuccess, accessToke
   const handleSendRequest = async (targetUserId) => {
     setSending(targetUserId);
     try {
-      const res = await authFetch('/api/whispers', {
-        method: "POST",
-        body: JSON.stringify({
-          userAId: userId,
-          userBId: targetUserId,
-        }),
+      const res = await fetch('/api/whispers', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            senderId: currentUserId,
+            receiverId,
+            message: msgText,
+            fingerprint: fp.hash,
+          }),
       });
 
       if (res.ok) {

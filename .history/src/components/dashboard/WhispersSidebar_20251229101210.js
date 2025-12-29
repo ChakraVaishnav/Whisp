@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
-import { getFingerprint } from "bro-auth/browser";
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -15,7 +14,7 @@ export default function WhispersSidebar({ accessToken, userId, selectedWhisper, 
   const { socket } = useSocket();
   const [presenceMap, setPresenceMap] = useState({});
   const [menuOpen, setMenuOpen] = useState(false);
-  const { clearToken, authFetch, setToken } = useAuth();
+  const { clearToken } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -41,10 +40,14 @@ export default function WhispersSidebar({ accessToken, userId, selectedWhisper, 
 
   const fetchWhispers = async () => {
     try {
-      const res = await authFetch(`/api/whispers?userId=${userId}`,
+      const res = await fetch(`/api/whispers?userId=${userId}`,
         {
           method: "GET",
-        }
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          }
+      }
       );
       if (res.ok) {
         const data = await res.json();
@@ -87,47 +90,46 @@ export default function WhispersSidebar({ accessToken, userId, selectedWhisper, 
             {/* Dropdown menu */}
             <div className="relative">
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-gray-900/95 border border-gray-800/50 rounded-lg shadow-lg p-2 z-50">
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onAddClick?.();
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-gray-800/20 transition-colors"
-                  >
-                    <span className="w-8 h-8 rounded-md bg-purple-600/20 flex items-center justify-center text-purple-300">+</span>
-                    <span className="text-sm text-white font-medium">Add Whisper</span>
-                  </button>
+              <div className="absolute right-0 mt-2 w-56 bg-gray-900/95 border border-gray-800/50 rounded-lg shadow-lg p-2 z-50">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onAddClick?.();
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded hover:bg-gray-800/20 transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-md bg-purple-600/20 flex items-center justify-center text-purple-300">+</span>
+                  <span className="text-sm text-white font-medium">Add Whisper</span>
+                </button>
 
-                  <button
-                    className="flex items-center gap-3 w-full px-3 py-2 mt-1 rounded bg-gray-800/10 text-gray-400 cursor-not-allowed"
-                    disabled
-                  >
-                    <span className="w-8 h-8 rounded-md bg-gray-700/30 flex items-center justify-center text-gray-300">⚑</span>
-                    <span className="text-sm">Create Group (coming soon)</span>
-                  </button>
+                <button
+                  className="flex items-center gap-3 w-full px-3 py-2 mt-1 rounded bg-gray-800/10 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  <span className="w-8 h-8 rounded-md bg-gray-700/30 flex items-center justify-center text-gray-300">⚑</span>
+                  <span className="text-sm">Create Group (coming soon)</span>
+                </button>
 
-                  <div className="mt-2 border-t border-gray-800/40" />
+                <div className="mt-2 border-t border-gray-800/40" />
 
-                  <button
+                <button
                     onClick={async () => {
-                      try {
-                        setMenuOpen(false);
-                        await authFetch('/api/auth/logout', { method: 'POST' });
-                      } catch (err) {
-                        logger.error('Logout failed', err);
-                      }
-                      if (setToken) setToken(null);
-                      clearToken();
-                      router.push('/login');
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded hover:bg-red-700/10 transition-colors"
-                  >
-                    <span className="w-8 h-8 rounded-md bg-red-700/10 flex items-center justify-center text-red-300">⎋</span>
-                    <span className="text-sm text-red-300 font-medium">Log out</span>
-                  </button>
-                </div>
-              )}
+                    try {
+                      setMenuOpen(false);
+                      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+                    } catch (err) {
+                      logger.error('Logout failed', err);
+                    }
+                    clearToken();
+                    router.push('/login');
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2 mt-2 rounded hover:bg-red-700/10 transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-md bg-red-700/10 flex items-center justify-center text-red-300">⎋</span>
+                  <span className="text-sm text-red-300 font-medium">Log out</span>
+                </button>
+              </div>
+            )}
             </div>
           </div>
         </div>
@@ -159,19 +161,20 @@ export default function WhispersSidebar({ accessToken, userId, selectedWhisper, 
                 key={whisper.id}
                 whileHover={{ x: 4 }}
                 onClick={() => onSelectWhisper(whisper)}
-                className={`p-4 border-b border-gray-800/30 cursor-pointer transition-all ${isSelected
-                  ? 'bg-linear-to-r from-purple-600/20 to-blue-600/20 border-l-4 border-l-purple-500'
-                  : 'hover:bg-gray-800/30'
-                  }`}
+                className={`p-4 border-b border-gray-800/30 cursor-pointer transition-all ${
+                  isSelected
+                    ? 'bg-linear-to-r from-purple-600/20 to-blue-600/20 border-l-4 border-l-purple-500'
+                    : 'hover:bg-gray-800/30'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   {/* Avatar */}
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                      {(otherUser?.username || otherUser?.email || '?')[0].toUpperCase()}
-                    </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${presenceMap[otherUser?.id] ? 'bg-green-400' : 'bg-orange-400'}`} />
-                  </div>
+                        <div className="relative">
+                          <div className="w-10 h-10 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                            {(otherUser?.username || otherUser?.email || '?')[0].toUpperCase()}
+                          </div>
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-gray-900 ${presenceMap[otherUser?.id] ? 'bg-green-400' : 'bg-orange-400'}`} />
+                        </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">

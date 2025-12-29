@@ -1,12 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getFingerprint } from "bro-auth/browser";
 import logger from '../../utils/logger';
-import { useAuth } from "../../context/AuthContext";
 
-export default function NotificationBell({ userId, onUpdate, accessToken }) {
-  const { authFetch } = useAuth();
+export default function NotificationBell({ userId, onUpdate }) {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,11 +26,7 @@ export default function NotificationBell({ userId, onUpdate, accessToken }) {
 
   const fetchNotifications = async () => {
     try {
-      const res = await authFetch(`/api/whispers/pending?userId=${userId}`,
-        {
-          method: "GET",
-        }
-      );
+      const res = await fetch(`/api/whispers/pending?userId=${userId}`);
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.pending || []);
@@ -46,8 +39,9 @@ export default function NotificationBell({ userId, onUpdate, accessToken }) {
   const handleAccept = async (whisperId) => {
     setLoading(true);
     try {
-      const res = await authFetch(`/api/whispers/${whisperId}`, {
+      const res = await fetch(`/api/whispers/${whisperId}`, {
         method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'ACCEPTED' }),
       });
 
@@ -65,7 +59,7 @@ export default function NotificationBell({ userId, onUpdate, accessToken }) {
   const handleReject = async (whisperId) => {
     setLoading(true);
     try {
-      const res = await authFetch(`/api/whispers/${whisperId}`, {
+      const res = await fetch(`/api/whispers/${whisperId}`, {
         method: 'DELETE',
       });
 

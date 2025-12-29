@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-helper';
 import logger from '../../../../utils/logger';
 import prisma from '@/lib/prisma';
 
@@ -6,6 +7,9 @@ import prisma from '@/lib/prisma';
 // GET - Search users by username or email
 export async function GET(req) {
   try {
+    const auth = await verifyAuth(req);
+    if (!auth.valid) return auth.response;
+
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('query');
     const usernameOnly = searchParams.get('usernameOnly');
@@ -18,11 +22,11 @@ export async function GET(req) {
     const where = usernameOnly
       ? { username: { contains: query, mode: 'insensitive' } }
       : {
-          OR: [
-            { username: { contains: query, mode: 'insensitive' } },
-            { email: { contains: query, mode: 'insensitive' } },
-          ],
-        };
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+        ],
+      };
 
     const users = await prisma.user.findMany({
       where,
