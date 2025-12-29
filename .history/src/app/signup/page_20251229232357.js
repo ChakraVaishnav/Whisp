@@ -83,7 +83,14 @@ export default function SignupPage() {
           className="hidden lg:block order-2 lg:order-1"
         >
           {/* Logo */}
-          
+          <Link
+            href="/"
+            className="gap-2 left-0 text-gray-500 hover:text-white transition-colors mb-6 group text-sm"
+            aria-label="Back to home"
+          >
+            <span className="text-lg font-bold">&#8592;</span>
+            Back
+          </Link>
           <Link href="/" className="inline-block mb-12">
           
             <span className="text-4xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFingerprint } from "bro-auth/browser";
@@ -58,22 +57,20 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center relative overflow-hidden">
-      {/* Back Button - Top Left */}
-      <Link
-        href="/"
-        className="absolute top-6 left-6 flex items-center gap-2 text-gray-400 hover:text-white transition-colors z-20 text-sm font-semibold"
-        aria-label="Back to home"
-      >
-        <ArrowLeftIcon className="w-5 h-5" />
-        <span>Back</span>
-      </Link>
       {/* Animated background blobs */}
-      
+      <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-6 group text-sm"
+            aria-label="Back to home"
+          >
+            <span className="text-lg font-bold">&#8592;</span>
+            Back
+          </Link>
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-600/20 rounded-full mix-blend-screen filter blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/20 rounded-full mix-blend-screen filter blur-3xl" />
       </div>
-      
+
       <div className="w-full max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center px-6">
         {/* LEFT SIDE - Interactive Whisp Info */}
         <motion.div
@@ -83,9 +80,7 @@ export default function SignupPage() {
           className="hidden lg:block order-2 lg:order-1"
         >
           {/* Logo */}
-          
           <Link href="/" className="inline-block mb-12">
-          
             <span className="text-4xl font-bold bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
               Whisp
             </span>
