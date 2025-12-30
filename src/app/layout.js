@@ -18,7 +18,10 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://whispchat.vercel.ap
 
 export const metadata = {
   metadataBase: new URL(baseUrl),
-  title,
+  title: {
+    default: "Whisp",
+    template: "%s | Whisp",
+  },
   description,
   keywords: [
     "encrypted chat",
@@ -54,20 +57,26 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
+  verification: {
+    google: "jka4DRBGLCNJ_bMO3bCsvIu1JzP7aLQoiF_-cUn7-lE",
+  },
+  referrer: 'strict-origin-when-cross-origin',
+};
+
+export const viewport = {
+  themeColor: '#0f172a',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      
-      <head>
-        <link rel="icon" href="logo.png" />
-        <meta name="google-site-verification" content="jka4DRBGLCNJ_bMO3bCsvIu1JzP7aLQoiF_-cUn7-lE" />
-        <meta name="theme-color" content="#0f172a" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="robots" content="index, follow" />
-        <meta name="referrer" content="strict-origin-when-cross-origin" />
-      </head>
+
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>{children}</AuthProvider>
       </body>

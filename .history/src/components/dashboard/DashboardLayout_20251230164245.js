@@ -93,7 +93,7 @@ export default function DashboardLayout({ user, accessToken }) {
                 onAddClick={() => setShowAddModal(true)}
                 refreshKey={refreshKey}
                 accessToken={accessToken}
-                className="w-80 overflow-x:hidden"
+                className="w-80 flex-shrink-0"
               />
 
               <div className="flex flex-col flex-1 min-h-0">

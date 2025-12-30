@@ -38,39 +38,8 @@ import CTASection from '@/components/CTASection';
 import ContactSection from '@/components/ContactSection';
 
 export default function Home() {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: 'Whisp',
-    applicationCategory: 'CommunicationApplication',
-    operatingSystem: 'Web',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-    description: 'A modern, encrypted chat app focused on privacy, simplicity, and speed.',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '124',
-    },
-  }
-
-  const websiteJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Whisp',
-    alternateName: ['Whisp Chat', 'Whisp App'],
-    url: 'https://whispchat.vercel.app/',
-  }
-
   return (
     <main className="w-full bg-gray-950">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, websiteJsonLd]) }}
-      />
       <Navigation />
       <HeroSection />
       <FeaturesSection />

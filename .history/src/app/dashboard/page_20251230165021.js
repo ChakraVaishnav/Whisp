@@ -1,4 +1,3 @@
-"use client";
 export const metadata = {
   title: "Dashboard | Whisp",
   description: "Your private, encrypted dashboard for secure messaging on Whisp.",
@@ -29,6 +28,8 @@ export const metadata = {
     follow: true,
   },
 };
+
+"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getFingerprint } from "bro-auth/browser";

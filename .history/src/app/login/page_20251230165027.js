@@ -1,5 +1,3 @@
-
-'use client';
 export const metadata = {
   title: "Login | Whisp",
   description: "Login to your secure Whisp account for encrypted, private messaging.",
@@ -29,6 +27,8 @@ export const metadata = {
     follow: true,
   },
 };
+
+'use client';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';

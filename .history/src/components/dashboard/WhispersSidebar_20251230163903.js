@@ -143,7 +143,7 @@ export default function WhispersSidebar({ accessToken, userId, selectedWhisper, 
       </div>
 
       {/* Whispers List */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden dashboard-scrollbar">
+      <div className="flex-1 overflow-y-auto dashboard-scrollbar">
         {loading ? (
           <div className="p-4 text-center text-gray-500 text-sm">Loading...</div>
         ) : filteredWhispers.length === 0 ? (
