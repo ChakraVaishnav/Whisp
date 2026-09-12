@@ -23,11 +23,13 @@ export default function LoginClient() {
         setLoading(true);
         try {
             const fp = await getFingerprint();
+
+            console.log(fp.hash + " " + fp.normalizedString + " " + fp.components);
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ email, password, fingerprint: fp.hash }),
+                body: JSON.stringify({ email, password, fingerprint: fp.normalizedString }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Login failed');

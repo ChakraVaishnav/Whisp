@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { generateTokens, buildRefreshCookie } from 'bro-auth/core';
 import logger from '../../../../utils/logger';
 import prisma from '@/lib/prisma';
+import { createHash } from 'crypto';
 
 
 export async function POST(req) {
@@ -11,16 +12,17 @@ export async function POST(req) {
     const normalize = (s) => (typeof s === 'string' ? s.trim().replace(/^['"]|['"]$/g, '') : s);
     const accessSecret = normalize(process.env.ACCESS_SECRET);
     const refreshSecret = normalize(process.env.REFRESH_SECRET);
-    
+
     // DEBUG: Log secret lengths (not the secrets themselves)
     logger.log('[LOGIN] Secret lengths:', { access: accessSecret?.length, refresh: refreshSecret?.length });
-    
+
     if (!accessSecret || !refreshSecret) {
       logger.error('[LOGIN] Missing secrets after normalization');
       return NextResponse.json({ error: 'Server misconfiguration: secrets missing' }, { status: 500 });
     }
     const { email, password, fingerprint } = await req.json();
     if (!email || !password || !fingerprint) {
+      console.log(email + " " + password + " " + fingerprint);
       return NextResponse.json({ error: 'Email, password and fingerprint are required' }, { status: 400 });
     }
 
@@ -34,8 +36,11 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    // Hash the fingerprint (normalized string) before binding it to the token
+    const hashedFingerprint = createHash('sha256').update(fingerprint).digest('hex');
+
     // Generate access + refresh tokens bound to fingerprint (positional args)
-    const tokens = generateTokens(user.id, fingerprint, accessSecret, refreshSecret);
+    const tokens = generateTokens(user.id, hashedFingerprint, accessSecret, refreshSecret);
 
     const cookieObj = buildRefreshCookie(tokens.refreshToken);
     const serializeCookie = (c) => {

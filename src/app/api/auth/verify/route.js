@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAccessToken } from 'bro-auth/core';
 import logger from '../../../../utils/logger';
 import prisma from '@/lib/prisma';
+import { createHash } from 'crypto';
 
 
 // Verify access token server-side using bro-auth
@@ -23,7 +24,9 @@ export async function POST(req) {
       return NextResponse.json({ valid: false, error: 'token and fingerprint required' }, { status: 400 });
     }
 
-    const result = verifyAccessToken(token, fingerprint, accessSecret);
+    // Hash the normalized string to match what's stored in the token
+    const hashedFingerprint = createHash('sha256').update(fingerprint).digest('hex');
+    const result = verifyAccessToken(token, hashedFingerprint, accessSecret);
     if (!result.valid) {
       return NextResponse.json({ valid: false, error: result.error }, { status: 401 });
     }

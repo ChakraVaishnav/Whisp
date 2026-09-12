@@ -59,7 +59,7 @@ export default function DashboardClient() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: 'include',
-                body: JSON.stringify({ token, fingerprint: fp.hash }),
+                body: JSON.stringify({ token, fingerprint: fp.normalizedString }),
             });
             return res.json();
         } catch (err) {

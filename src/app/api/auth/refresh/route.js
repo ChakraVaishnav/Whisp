@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyRefreshToken, generateTokens, buildRefreshCookie } from 'bro-auth/core';
+import { createHash } from 'crypto';
 import logger from '../../../../utils/logger';
 
 export async function POST(req) {
@@ -8,7 +9,7 @@ export async function POST(req) {
     const normalize = (s) => (typeof s === 'string' ? s.trim().replace(/^['"]|['"]$/g, '') : s);
     const accessSecret = normalize(process.env.ACCESS_SECRET);
     const refreshSecret = normalize(process.env.REFRESH_SECRET);
-    
+
     if (!accessSecret || !refreshSecret) {
       logger.error('Missing ACCESS_SECRET or REFRESH_SECRET in environment');
       return NextResponse.json({ error: 'Server misconfiguration: secrets missing' }, { status: 500 });
@@ -35,7 +36,9 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Refresh token and fingerprint are required' }, { status: 400 });
     }
 
-    const result = verifyRefreshToken(refreshToken, fingerprint, refreshSecret);
+    const hashedFingerprint = createHash('sha256').update(fingerprint).digest('hex');
+
+    const result = verifyRefreshToken(refreshToken, hashedFingerprint, refreshSecret);
     logger.log('[REFRESH] Verify result:', { valid: result.valid, error: result.error });
     if (!result.valid) {
       return NextResponse.json({ error: result.error || 'Invalid refresh token' }, { status: 401 });
@@ -43,7 +46,7 @@ export async function POST(req) {
 
     // Issue new token pair (positional args per bro-auth)
     const userId = result.payload?.sub || result.payload?.userId || null;
-    const tokens = generateTokens(userId, fingerprint, accessSecret, refreshSecret);
+    const tokens = generateTokens(userId, hashedFingerprint, accessSecret, refreshSecret);
 
     // Rotate refresh token via cookie (serialize)
     const cookieObj = buildRefreshCookie(tokens.refreshToken);

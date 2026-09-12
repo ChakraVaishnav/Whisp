@@ -9,56 +9,56 @@ import { useRouter } from "next/navigation";
 import logger from '../utils/logger';
 
 export default function Navigation() {
-  const { accessToken, setToken} = useAuth();
+  const { accessToken, setToken } = useAuth();
   let token = accessToken;
   const Router = useRouter();
   useEffect(() => {
     const tryRefresh = async () => {
-    try {
-      const fp = await getFingerprint();
-      const res = await fetch("/api/auth/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: 'include',
-        body: JSON.stringify({ fingerprint: fp.hash }),
-      });
+      try {
+        const fp = await getFingerprint();
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: 'include',
+          body: JSON.stringify({ fingerprint: fp.normalizedString }),
+        });
 
-      if (!res.ok) return null;
+        if (!res.ok) return null;
 
-      const data = await res.json();
-      if (!data.accessToken) return null;
-
-      setToken(data.accessToken);
-      verifyToken(data.accessToken);
-    } catch (err) {
-      logger.error("Refresh failed", err);
-      return null;
-    }
-  };
-  const verifyToken = async (token) => {
-    try {
-      const fp = await getFingerprint();
-
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token, fingerprint: fp.hash }),
-      });
-
-      if (res.ok) {
         const data = await res.json();
-        if (data.valid) {
-          Router.push("/dashboard");
-        }
-      }
-    } catch (err) {
-      logger.error("Verify error", err);
-    }
-  };
+        if (!data.accessToken) return null;
 
-  tryRefresh();
-}, []);
+        setToken(data.accessToken);
+        verifyToken(data.accessToken);
+      } catch (err) {
+        logger.error("Refresh failed", err);
+        return null;
+      }
+    };
+    const verifyToken = async (token) => {
+      try {
+        const fp = await getFingerprint();
+
+        const res = await fetch("/api/auth/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ token, fingerprint: fp.normalizedString }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.valid) {
+            Router.push("/dashboard");
+          }
+        }
+      } catch (err) {
+        logger.error("Verify error", err);
+      }
+    };
+
+    tryRefresh();
+  }, []);
 
 
   return (

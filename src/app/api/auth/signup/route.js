@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { generateTokens, buildRefreshCookie } from 'bro-auth/core';
+import { createHash } from 'crypto';
 import logger from '../../../../utils/logger';
 import prisma from '@/lib/prisma';
 
@@ -11,7 +12,7 @@ export async function POST(req) {
     const normalize = (s) => (typeof s === 'string' ? s.trim().replace(/^['"]|['"]$/g, '') : s);
     const accessSecret = normalize(process.env.ACCESS_SECRET);
     const refreshSecret = normalize(process.env.REFRESH_SECRET);
-    
+
     if (!accessSecret || !refreshSecret) {
       logger.error('Missing ACCESS_SECRET or REFRESH_SECRET in environment');
       return NextResponse.json({ error: 'Server misconfiguration: secrets missing' }, { status: 500 });
@@ -38,8 +39,9 @@ export async function POST(req) {
       },
     });
 
-    // Generate tokens bound to fingerprint
-     const tokens = generateTokens(user.id, fingerprint, accessSecret, refreshSecret);
+    // Generate tokens bound to hashed fingerprint
+    const hashedFingerprint = createHash('sha256').update(fingerprint).digest('hex');
+    const tokens = generateTokens(user.id, hashedFingerprint, accessSecret, refreshSecret);
 
     const cookieObj = buildRefreshCookie(tokens.refreshToken);
     const serializeCookie = (c) => {

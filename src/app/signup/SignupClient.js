@@ -44,7 +44,7 @@ export default function SignupClient() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ ...formData, fingerprint: fp.hash }),
+                body: JSON.stringify({ ...formData, fingerprint: fp.normalizedString }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Signup failed');

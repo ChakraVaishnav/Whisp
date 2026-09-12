@@ -1,7 +1,7 @@
-
 import { verifyAccessToken } from 'bro-auth/core';
 import logger from '../utils/logger';
 import { NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 
 /**
  * Verifies the access token from the request.
@@ -44,7 +44,9 @@ export async function verifyAuth(req) {
             return { valid: false, response: NextResponse.json({ error: 'Fingerprint required in x-fingerprint header' }, { status: 400 }) };
         }
 
-        const result = verifyAccessToken(token, fingerprint, accessSecret);
+        // Hash the normalized string to match what's stored in the token
+        const hashedFingerprint = createHash('sha256').update(fingerprint).digest('hex');
+        const result = verifyAccessToken(token, hashedFingerprint, accessSecret);
 
         if (!result.valid) {
             return { valid: false, response: NextResponse.json({ error: result.error || 'Invalid token' }, { status: 401 }) };

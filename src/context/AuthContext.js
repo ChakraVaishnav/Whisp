@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: 'include',
-        body: JSON.stringify({ fingerprint: fp.hash }),
+        body: JSON.stringify({ fingerprint: fp.normalizedString }),
       });
 
       if (!res.ok) {
@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
     const headers = {
       ...options.headers,
       'Content-Type': 'application/json',
-      'x-fingerprint': fp.hash,
+      'x-fingerprint': fp.normalizedString,
     };
 
     // Use current state token if available
