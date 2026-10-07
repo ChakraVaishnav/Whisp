@@ -148,10 +148,3 @@ Key integrations:
 - [Security notes](docs/security.md) (or add one if missing)
 - Issues: https://github.com/ChakraVaishnav/Whisp/issues
 
----
-
-## ⚖️ License
-
-This project is licensed under the MIT License. Contributions are welcome under the same terms.
-
-*Built with intent by the Whisp contributors.*
